@@ -1,6 +1,6 @@
 {
   "navigationBarTitleText": "用户主页",
   "usingComponents": {
-    "icon": "/components/icon/icon"
+    "svg-icon": "/components/svg-icon/svg-icon"
   }
 }

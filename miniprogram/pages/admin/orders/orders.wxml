@@ -1,0 +1,62 @@
+<!-- 订单管理 -->
+<view class="admin-page">
+  <!-- 搜索 -->
+  <view class="admin-search">
+    <input class="admin-search-input" placeholder="搜索订单号/商品名" value="{{keyword}}" bindinput="onKeyword" confirm-type="search" bindconfirm="onSearch" />
+    <view class="admin-search-btn" bindtap="onSearch">搜索</view>
+  </view>
+
+  <!-- 状态筛选 -->
+  <view class="admin-chips">
+    <view class="admin-chip {{status === '' ? 'active' : ''}}" data-status="" bindtap="onStatus">全部</view>
+    <view class="admin-chip {{status === '0' ? 'active' : ''}}" data-status="0" bindtap="onStatus">待交易</view>
+    <view class="admin-chip {{status === '1' ? 'active' : ''}}" data-status="1" bindtap="onStatus">已完成</view>
+    <view class="admin-chip {{status === '2' ? 'active' : ''}}" data-status="2" bindtap="onStatus">买家取消</view>
+    <view class="admin-chip {{status === '3' ? 'active' : ''}}" data-status="3" bindtap="onStatus">卖家取消</view>
+    <view class="admin-chip {{status === '4' ? 'active' : ''}}" data-status="4" bindtap="onStatus">超时取消</view>
+  </view>
+
+  <!-- 列表 -->
+  <view class="order-card" wx:for="{{orders}}" wx:key="id" data-id="{{item.id}}" bindtap="showDetail">
+    <view class="order-top">
+      <text class="order-no text-ellipsis">{{item.orderNo || item.id}}</text>
+      <text class="tag {{item.statusClass}}">{{item.statusDesc}}</text>
+    </view>
+    <view class="order-body">
+      <view class="order-img">
+        <image wx:if="{{item.goodsImage}}" src="{{item.goodsImage}}" mode="aspectFill" />
+        <view wx:else class="img-ph">📦</view>
+      </view>
+      <view class="order-info flex-1">
+        <view class="order-title text-ellipsis">{{item.goodsTitle || '商品'}}</view>
+        <view class="order-price">¥{{item.priceText}}</view>
+        <view class="order-sub">{{item.buyerNickname}} → {{item.sellerNickname}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{!loading && orders.length === 0}}" class="empty">暂无订单</view>
+  <view class="load-more" wx:if="{{orders.length > 0}}">{{loadMoreText}}</view>
+
+  <!-- 详情弹窗 -->
+  <view class="sheet-mask" wx:if="{{showDetailModal}}" bindtap="closeDetail">
+    <view class="sheet" catchtap="noop">
+      <view class="sheet-title">
+        <text>订单详情</text>
+        <text class="sheet-close" bindtap="closeDetail">×</text>
+      </view>
+      <view class="info-row"><text class="info-label">订单号</text><text class="info-value">{{detail.orderNo}}</text></view>
+      <view class="info-row"><text class="info-label">商品</text><text class="info-value">{{detail.goodsTitle}}</text></view>
+      <view class="info-row"><text class="info-label">金额</text><text class="info-value">¥{{detail.priceText}}</text></view>
+      <view class="info-row"><text class="info-label">买家</text><text class="info-value">{{detail.buyerNickname}}</text></view>
+      <view class="info-row"><text class="info-label">买家手机</text><text class="info-value">{{detail.buyerPhone || '-'}}</text></view>
+      <view class="info-row"><text class="info-label">卖家</text><text class="info-value">{{detail.sellerNickname}}</text></view>
+      <view class="info-row"><text class="info-label">卖家QQ</text><text class="info-value">{{detail.sellerQq || '-'}}</text></view>
+      <view class="info-row"><text class="info-label">卖家微信</text><text class="info-value">{{detail.sellerWechat || '-'}}</text></view>
+      <view class="info-row"><text class="info-label">状态</text><text class="info-value">{{detail.statusDesc}}</text></view>
+      <view class="info-row"><text class="info-label">预订时间</text><text class="info-value">{{detail.createTimeText}}</text></view>
+      <view class="info-row" wx:if="{{detail.tradeTime}}"><text class="info-label">完成时间</text><text class="info-value">{{detail.tradeTimeText}}</text></view>
+      <view class="info-row" wx:if="{{detail.contactFailAt}}"><text class="info-label">联系不上提交</text><text class="info-value">{{detail.contactFailAtText}}</text></view>
+    </view>
+  </view>
+</view>

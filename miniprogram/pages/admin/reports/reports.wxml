@@ -1,0 +1,66 @@
+<!-- 举报管理 -->
+<view class="admin-page">
+  <!-- 状态筛选 -->
+  <view class="admin-chips">
+    <view class="admin-chip {{status === '' ? 'active' : ''}}" data-status="" bindtap="onStatus">全部</view>
+    <view class="admin-chip {{status === '0' ? 'active' : ''}}" data-status="0" bindtap="onStatus">待处理</view>
+    <view class="admin-chip {{status === '1' ? 'active' : ''}}" data-status="1" bindtap="onStatus">已警告</view>
+    <view class="admin-chip {{status === '2' ? 'active' : ''}}" data-status="2" bindtap="onStatus">已下架</view>
+    <view class="admin-chip {{status === '3' ? 'active' : ''}}" data-status="3" bindtap="onStatus">已封禁</view>
+    <view class="admin-chip {{status === '4' ? 'active' : ''}}" data-status="4" bindtap="onStatus">已驳回</view>
+  </view>
+
+  <!-- 列表 -->
+  <view class="report-card" wx:for="{{reports}}" wx:key="id" data-id="{{item.id}}" bindtap="showDetail">
+    <view class="report-top">
+      <text class="tag {{item.statusClass}}">{{item.statusDesc}}</text>
+      <text class="report-time">{{item.timeAgo}}</text>
+    </view>
+    <view class="report-title text-ellipsis">{{item.targetName || '对象'}} <text class="report-type">（{{item.targetTypeDesc}}）</text></view>
+    <view class="report-reason text-ellipsis">{{item.reason}}{{item.description ? '：' + item.description : ''}}</view>
+    <view class="report-reporter">举报人：{{item.reporterNickname}}</view>
+  </view>
+
+  <view wx:if="{{!loading && reports.length === 0}}" class="empty">暂无举报</view>
+  <view class="load-more" wx:if="{{reports.length > 0}}">{{loadMoreText}}</view>
+
+  <!-- 详情/处理弹窗 -->
+  <view class="sheet-mask" wx:if="{{showDetailModal}}" bindtap="closeDetail">
+    <view class="sheet" catchtap="noop">
+      <view class="sheet-title">
+        <text>举报处理</text>
+        <text class="sheet-close" bindtap="closeDetail">×</text>
+      </view>
+      <view class="info-row"><text class="info-label">举报对象</text><text class="info-value">{{detail.targetName}}（{{detail.targetTypeDesc}}）</text></view>
+      <view class="info-row"><text class="info-label">举报人</text><text class="info-value">{{detail.reporterNickname}}</text></view>
+      <view class="info-row"><text class="info-label">举报理由</text><text class="info-value">{{detail.reason}}</text></view>
+      <view class="info-row" wx:if="{{detail.description}}"><text class="info-label">详细描述</text><text class="info-value muted">{{detail.description}}</text></view>
+      <view class="info-row"><text class="info-label">举报时间</text><text class="info-value">{{detail.createTimeText}}</text></view>
+      <view class="info-row" wx:if="{{detail.handleResult}}"><text class="info-label">处理结果</text><text class="info-value muted">{{detail.handleResult}}</text></view>
+
+      <!-- 待处理时显示处理表单 -->
+      <block wx:if="{{detail.status === 0}}">
+        <view class="admin-form-label" style="margin-top: 20rpx;">处理决定</view>
+        <view class="radio-card {{handleStatus === 1 ? 'active' : ''}}" data-status="1" bindtap="onHandleStatus">
+          <text>警告</text><text class="desc">不封禁不下架</text>
+        </view>
+        <view class="radio-card {{handleStatus === 2 ? 'active' : ''}}" data-status="2" bindtap="onHandleStatus">
+          <text>下架商品</text><text class="desc">强制下架并通知卖家</text>
+        </view>
+        <view class="radio-card {{handleStatus === 3 ? 'active' : ''}}" data-status="3" bindtap="onHandleStatus">
+          <text>封禁账号</text><text class="desc">封禁被举报方</text>
+        </view>
+        <view class="radio-card {{handleStatus === 4 ? 'active' : ''}}" data-status="4" bindtap="onHandleStatus">
+          <text>驳回举报</text><text class="desc">举报不属实</text>
+        </view>
+        <view class="admin-form-label">处理结果说明（必填）</view>
+        <textarea class="admin-form-textarea" placeholder="填写处理说明" value="{{handleResult}}" bindinput="onHandleResult" />
+        <view class="checkbox-line" bindtap="toggleMalicious">
+          <text class="anon-box {{isMalicious ? 'checked' : ''}}">✓</text>
+          <text>标记为恶意举报（扣举报人信用分）</text>
+        </view>
+        <button class="btn btn-primary btn-block" bindtap="submitHandle" loading="{{submitting}}">确认处理</button>
+      </block>
+    </view>
+  </view>
+</view>

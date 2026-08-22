@@ -1,0 +1,77 @@
+<!-- 用户管理 -->
+<view class="admin-page">
+  <!-- 搜索 -->
+  <view class="admin-search">
+    <input class="admin-search-input" placeholder="搜索昵称/手机号/学号" value="{{keyword}}" bindinput="onKeyword" confirm-type="search" bindconfirm="onSearch" />
+    <view class="admin-search-btn" bindtap="onSearch">搜索</view>
+  </view>
+
+  <!-- 状态筛选 -->
+  <view class="admin-chips">
+    <view class="admin-chip {{status === '' ? 'active' : ''}}" data-status="" bindtap="onStatus">全部</view>
+    <view class="admin-chip {{status === '1' ? 'active' : ''}}" data-status="1" bindtap="onStatus">正常</view>
+    <view class="admin-chip {{status === '0' ? 'active' : ''}}" data-status="0" bindtap="onStatus">禁用</view>
+  </view>
+
+  <!-- 列表 -->
+  <view class="user-card" wx:for="{{users}}" wx:key="id" data-id="{{item.id}}" bindtap="showDetail">
+    <view class="user-avatar">
+      <image wx:if="{{item.avatar}}" src="{{item.avatar}}" mode="aspectFill" />
+      <text wx:else>{{item.avatarText}}</text>
+    </view>
+    <view class="user-info flex-1">
+      <view class="user-top">
+        <text class="user-name text-ellipsis">{{item.nickname}}</text>
+        <text class="tag {{item.status === 0 ? 'tag-danger' : 'tag-success'}}">{{item.statusDesc}}</text>
+      </view>
+      <view class="user-sub">{{item.phone || '-'}} · 信用分 {{item.creditScore}}</view>
+      <view class="user-sub">{{item.studentId || '无学号'}} <text wx:if="{{item.role === 1}}" class="tag tag-warning">管理员</text></view>
+    </view>
+  </view>
+
+  <view wx:if="{{!loading && users.length === 0}}" class="empty">暂无用户</view>
+  <view class="load-more" wx:if="{{users.length > 0}}">{{loadMoreText}}</view>
+
+  <!-- 详情弹窗 -->
+  <view class="sheet-mask" wx:if="{{showDetailModal}}" bindtap="closeDetail">
+    <view class="sheet" catchtap="noop">
+      <view class="sheet-title">
+        <text>用户详情</text>
+        <text class="sheet-close" bindtap="closeDetail">×</text>
+      </view>
+      <view class="info-row"><text class="info-label">昵称</text><text class="info-value">{{detail.nickname}}</text></view>
+      <view class="info-row"><text class="info-label">手机号</text><text class="info-value">{{detail.phone}}</text></view>
+      <view class="info-row"><text class="info-label">学号</text><text class="info-value">{{detail.studentId || '-'}}</text></view>
+      <view class="info-row"><text class="info-label">真实姓名</text><text class="info-value">{{detail.realName || '-'}}</text></view>
+      <view class="info-row"><text class="info-label">QQ</text><text class="info-value">{{detail.qq || '-'}}</text></view>
+      <view class="info-row"><text class="info-label">微信</text><text class="info-value">{{detail.wechat || '-'}}</text></view>
+      <view class="info-row"><text class="info-label">信用分</text><text class="info-value">{{detail.creditScore}}</text></view>
+      <view class="info-row"><text class="info-label">角色</text><text class="info-value">{{detail.roleDesc}}</text></view>
+      <view class="info-row"><text class="info-label">状态</text><text class="info-value">{{detail.statusDesc}}</text></view>
+      <view class="info-row"><text class="info-label">注册时间</text><text class="info-value">{{detail.createTimeText}}</text></view>
+
+      <!-- 操作按钮（管理员不可操作） -->
+      <view class="action-row" wx:if="{{detail.role !== 1}}">
+        <view wx:if="{{detail.status === 1}}" class="action-btn danger" bindtap="banUser">封禁</view>
+        <view wx:else class="action-btn success" bindtap="enableUser">启用</view>
+        <view class="action-btn" bindtap="resetPwd">重置密码</view>
+        <view class="action-btn" bindtap="openCredit">调整信用分</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 调整信用分弹窗 -->
+  <view class="sheet-mask" wx:if="{{showCredit}}" bindtap="closeCredit">
+    <view class="sheet" catchtap="noop">
+      <view class="sheet-title">
+        <text>调整信用分（当前 {{detail.creditScore}}）</text>
+        <text class="sheet-close" bindtap="closeCredit">×</text>
+      </view>
+      <view class="admin-form-label">变更值（正数加分，负数扣分）</view>
+      <input class="admin-form-input" type="number" placeholder="如：-10 / +5" value="{{creditValue}}" bindinput="onCreditValue" />
+      <view class="admin-form-label">原因（必填）</view>
+      <input class="admin-form-input" placeholder="调整原因" value="{{creditReason}}" bindinput="onCreditReason" />
+      <button class="btn btn-primary btn-block" bindtap="submitCredit">确认调整</button>
+    </view>
+  </view>
+</view>

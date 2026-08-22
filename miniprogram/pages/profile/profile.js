@@ -21,6 +21,11 @@ Page({
     }
     this.loadProfile();
     this.loadUnread();
+    // 同步自定义 tabBar 选中态与角标
+    getApp().refreshUnread().then((total) => {
+      const tabBar = this.getTabBar && this.getTabBar();
+      if (tabBar) tabBar.sync(3, total);
+    });
   },
 
   loadProfile() {
@@ -57,6 +62,7 @@ Page({
   goNotifications() { wx.switchTab({ url: '/pages/notifications/notifications' }); },
   goReviews() { wx.navigateTo({ url: '/pages/reviews/reviews' }); },
   goCreditLogs() { wx.navigateTo({ url: '/pages/credit-logs/credit-logs' }); },
+  goAdmin() { wx.navigateTo({ url: '/pages/admin/admin' }); },
 
   // ---------- 编辑资料 ----------
   openEdit() {

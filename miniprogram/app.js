@@ -21,20 +21,23 @@ App({
     }
   },
 
-  // 刷新未读角标（通知 + 私聊），供 tab 页 onShow 调用
+  // 刷新未读角标（通知 + 私聊），供 tab 页 onShow 调用；resolve 未读总数
   refreshUnread() {
-    let total = 0;
-    const app = this;
-    const done = () => {
-      app.globalData.unreadTotal = total;
-    };
-    let left = 2;
-    const one = (p) => {
-      p.then((n) => { total += (n || 0); }).catch(() => {})
-        .then(() => { if (--left <= 0) done(); });
-    };
-    if (!request.getToken()) { done(); return; }
-    one(request.get('/notification/unread-count', {}, { noToast: true }));
-    one(request.get('/chat/unread-count', {}, { noToast: true }));
+    return new Promise((resolve) => {
+      const app = this;
+      let total = 0;
+      const done = () => {
+        app.globalData.unreadTotal = total;
+        resolve(total);
+      };
+      if (!request.getToken()) { done(); return; }
+      let left = 2;
+      const one = (p) => {
+        p.then((n) => { total += (n || 0); }).catch(() => {})
+          .then(() => { if (--left <= 0) done(); });
+      };
+      one(request.get('/notification/unread-count', {}, { noToast: true }));
+      one(request.get('/chat/unread-count', {}, { noToast: true }));
+    });
   }
 });

@@ -1,0 +1,25 @@
+<!-- 管理端入口：仪表盘 -->
+<view class="admin-page">
+  <!-- 渐变标题 -->
+  <view class="admin-hero">
+    <view class="hero-title">后台管理</view>
+    <view class="hero-sub">校园二手交易平台 · 数据总览</view>
+  </view>
+
+  <!-- 统计卡片 -->
+  <view class="stat-grid">
+    <view class="stat-card" wx:for="{{stats}}" wx:key="label">
+      <view class="stat-icon {{item.bg}}">{{item.icon}}</view>
+      <view class="stat-value">{{item.value}}</view>
+      <view class="stat-label">{{item.label}}</view>
+    </view>
+  </view>
+
+  <!-- 功能宫格 -->
+  <view class="grid-6">
+    <view class="grid-item" wx:for="{{grid}}" wx:key="key" data-key="{{item.key}}" bindtap="goModule">
+      <view class="grid-icon {{item.bg}}">{{item.icon}}</view>
+      <view class="grid-text">{{item.text}}</view>
+    </view>
+  </view>
+</view>

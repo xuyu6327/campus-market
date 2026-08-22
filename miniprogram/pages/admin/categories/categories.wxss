@@ -1,0 +1,16 @@
+/* 分类管理 */
+@import "../common.wxss";
+
+.cat-card {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 24rpx 28rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(26, 26, 46, 0.05);
+}
+.cat-name { font-size: 28rpx; font-weight: 700; }
+.cat-indent { color: var(--color-text-tertiary); }
+.cat-sub { font-size: 22rpx; color: var(--color-text-tertiary); margin-top: 4rpx; }

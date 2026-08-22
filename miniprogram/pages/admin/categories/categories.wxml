@@ -1,0 +1,45 @@
+<!-- 分类管理 -->
+<view class="admin-page">
+  <!-- 新增按钮 -->
+  <view class="admin-search">
+    <view class="admin-search-btn" style="width: 100%; justify-content: center;" bindtap="openAdd">＋ 新增分类</view>
+  </view>
+
+  <!-- 列表 -->
+  <view class="cat-card" wx:for="{{categories}}" wx:key="id">
+    <view class="cat-info flex-1">
+      <view class="cat-name">
+        <text class="cat-indent" wx:if="{{item.parentId}}">↳ </text>{{item.name}}
+        <text class="tag {{item.status === 0 ? 'tag-danger' : 'tag-success'}}" style="margin-left: 12rpx;">{{item.statusDesc}}</text>
+      </view>
+      <view class="cat-sub">{{item.parentName || '一级分类'}} · 商品 {{item.goodsCount}} · 排序 {{item.sortOrder}}</view>
+    </view>
+    <view class="action-row" style="margin-top: 0;">
+      <view class="action-btn" data-id="{{item.id}}" catchtap="openEdit">编辑</view>
+      <view wx:if="{{item.status === 1}}" class="action-btn danger" data-id="{{item.id}}" catchtap="toggleStatus">禁用</view>
+      <view wx:else class="action-btn success" data-id="{{item.id}}" catchtap="toggleStatus">启用</view>
+    </view>
+  </view>
+
+  <view wx:if="{{!loading && categories.length === 0}}" class="empty">暂无分类</view>
+  <view class="load-more" wx:if="{{categories.length > 0}}">{{loadMoreText}}</view>
+
+  <!-- 新增/编辑弹窗 -->
+  <view class="sheet-mask" wx:if="{{showForm}}" bindtap="closeForm">
+    <view class="sheet" catchtap="noop">
+      <view class="sheet-title">
+        <text>{{editId ? '编辑分类' : '新增分类'}}</text>
+        <text class="sheet-close" bindtap="closeForm">×</text>
+      </view>
+      <view class="admin-form-label">分类名称</view>
+      <input class="admin-form-input" placeholder="分类名称" value="{{form.name}}" bindinput="onFormName" />
+      <view class="admin-form-label">父分类（留空为一级分类）</view>
+      <picker range="{{parentNames}}" value="{{parentIndex}}" bindchange="onParentChange">
+        <view class="admin-form-input" style="line-height: 80rpx;">{{parentIndex === 0 ? '一级分类' : parentNames[parentIndex]}}</view>
+      </picker>
+      <view class="admin-form-label">排序值</view>
+      <input class="admin-form-input" type="number" placeholder="数字越小越靠前" value="{{form.sortOrder}}" bindinput="onFormSort" />
+      <button class="btn btn-primary btn-block" bindtap="submitForm" loading="{{submitting}}">保存</button>
+    </view>
+  </view>
+</view>

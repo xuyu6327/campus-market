@@ -428,3 +428,91 @@
   color: var(--color-text-tertiary);
   font-size: var(--font-size-sm);
 }
+
+/* ============================================================
+  移动端适配（小程序 web-view / 窄屏 <768px）
+  侧边栏改为顶部横向滚动导航；表格横向滚动兜底；弹窗/栅格单列
+  ============================================================ */
+@media (max-width: 768px) {
+  /* 顶栏：压缩 */
+  .admin-topbar {
+    height: 50px;
+    padding: 0 12px;
+  }
+  .admin-logo { font-size: var(--font-size-base); gap: 8px; }
+  .admin-logo .logo-badge { width: 28px; height: 28px; font-size: 14px; }
+  .topbar-right { gap: 8px; }
+  .topbar-right .btn-ghost { display: none; } /* web-view 内用系统返回 */
+  .admin-user { font-size: var(--font-size-xs); gap: 4px; }
+  .admin-user .icon { display: none; }
+  .topbar-right .btn-outline { font-size: var(--font-size-xs); padding: 4px 10px; }
+
+  /* 侧边栏：改顶部横向滚动导航 */
+  .admin-sidebar {
+    position: sticky;
+    top: 50px;
+    width: 100%;
+    height: auto;
+    display: flex;
+    align-items: center;
+    overflow-x: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    padding: 0 6px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .admin-sidebar::-webkit-scrollbar { display: none; }
+  .admin-sidebar .nav-item {
+    flex-shrink: 0;
+    white-space: nowrap;
+    border-left: none;
+    border-bottom: 3px solid transparent;
+    padding: 12px 14px;
+    font-size: var(--font-size-xs);
+  }
+  .admin-sidebar .nav-item.active {
+    border-left: none;
+    border-bottom-color: var(--color-primary);
+  }
+
+  /* 主体 */
+  .admin-main { margin-left: 0; }
+  .admin-frame { height: calc(100vh - 50px - 45px); }
+
+  /* 子页面 */
+  .admin-page { padding: 14px; }
+  .admin-page-header { margin-bottom: 14px; }
+  .admin-page-header h1 { font-size: var(--font-size-lg); }
+  .admin-page-header .sub { display: none; }
+
+  /* 筛选栏：全宽堆叠 */
+  .filter-bar { gap: 8px; }
+  .filter-input { width: 100%; }
+  .filter-select { width: 100%; }
+  .filter-bar .btn { flex-shrink: 0; }
+
+  /* 表格：横向滚动兜底（列多的表格可左右滑动） */
+  .admin-card { overflow-x: auto; }
+  .admin-table { min-width: 560px; }
+  .admin-table th, .admin-table td { padding: 10px 12px; white-space: nowrap; }
+  .admin-table .cell-title { max-width: 180px; }
+
+  /* 弹窗 */
+  .modal-content { max-width: calc(100vw - 24px); }
+  .admin-modal-lg { max-width: calc(100vw - 24px); }
+  .detail-grid { grid-template-columns: 1fr; }
+  .detail-grid .full { grid-column: auto; }
+
+  /* 统计卡片：两列 */
+  .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stat-card { padding: 14px; gap: 10px; }
+  .stat-icon { width: 38px; height: 38px; }
+  .stat-value { font-size: 20px; }
+
+  /* 分页 */
+  .pagination { gap: 4px; padding: 12px 8px; }
+  .page-btn { min-width: 30px; height: 30px; padding: 0 8px; }
+
+  /* 举报处理表单 */
+  .radio-item .desc { display: none; }
+}

@@ -12,7 +12,7 @@
       </view>
     </view>
     <view wx:if="{{messages.length === 0 && !loading}}" class="empty-state">
-      <view class="empty-icon"><icon name="message" size="96" color="#9CA3AF"/></view>
+      <view class="empty-icon"><svg-icon name="message" size="96" color="#9CA3AF"/></view>
       <text>开始聊天吧</text>
     </view>
   </scroll-view>

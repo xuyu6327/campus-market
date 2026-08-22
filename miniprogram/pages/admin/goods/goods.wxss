@@ -1,0 +1,28 @@
+/* 商品管理 */
+@import "../common.wxss";
+
+.goods-card {
+  display: flex;
+  gap: 20rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 24rpx 28rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(26, 26, 46, 0.05);
+}
+.goods-img {
+  width: 150rpx;
+  height: 150rpx;
+  border-radius: 16rpx;
+  background: var(--color-surface-alt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.goods-img image { width: 100%; height: 100%; }
+.img-ph { font-size: 56rpx; opacity: 0.25; }
+.goods-title { font-size: 28rpx; font-weight: 700; }
+.goods-price { font-size: 30rpx; font-weight: 700; color: var(--color-primary); margin-top: 6rpx; display: flex; align-items: center; gap: 12rpx; }
+.goods-sub { font-size: 22rpx; color: var(--color-text-tertiary); margin-top: 4rpx; }

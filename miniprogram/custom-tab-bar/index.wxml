@@ -1,0 +1,22 @@
+<view class="tab-bar">
+  <view
+    class="tab-item {{selected === index ? 'active' : ''}} {{item.special ? 'special' : ''}}"
+    wx:for="{{list}}"
+    wx:key="pagePath"
+    data-index="{{index}}"
+    bindtap="onTap"
+  >
+    <view wx:if="{{item.special}}" class="special-btn">
+      <!-- 加号用 CSS 绘制（view+background 是最基础的渲染能力，任何环境必显示） -->
+      <view class="plus-h"></view>
+      <view class="plus-v"></view>
+    </view>
+    <block wx:else>
+      <view class="tab-icon-wrap">
+        <svg-icon class="tab-icon" name="{{item.icon}}" size="44" color="{{selected === index ? '#FF6B35' : '#9CA3AF'}}"/>
+        <text class="tab-badge" wx:if="{{index === 1 && unread > 0}}">{{unread > 99 ? '99+' : unread}}</text>
+      </view>
+      <text class="tab-label {{selected === index ? 'active' : ''}}">{{item.text}}</text>
+    </block>
+  </view>
+</view>

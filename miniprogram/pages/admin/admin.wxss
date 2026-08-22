@@ -1,0 +1,6 @@
+/* 管理端入口页（样式见 common.wxss，此处仅页面级微调） */
+@import "common.wxss";
+
+.admin-page {
+  background: var(--color-bg);
+}

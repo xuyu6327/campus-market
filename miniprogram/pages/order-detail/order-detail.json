@@ -1,6 +1,6 @@
 {
   "navigationBarTitleText": "订单详情",
   "usingComponents": {
-    "icon": "/components/icon/icon"
+    "svg-icon": "/components/svg-icon/svg-icon"
   }
 }

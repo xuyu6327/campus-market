@@ -1,5 +1,5 @@
 /* 我的收藏 */
-.fav-page { padding-bottom: 40rpx; }
+.fav-page { padding-bottom: 200rpx; }
 .goods-list { padding: 20rpx 24rpx; }
 .goods-card {
   display: flex;

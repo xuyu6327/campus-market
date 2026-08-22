@@ -18,6 +18,11 @@ Page({
     }
     // 可能从详情页取消收藏后返回，刷新列表
     this.reload();
+    // 同步自定义 tabBar 选中态与角标
+    getApp().refreshUnread().then((total) => {
+      const tabBar = this.getTabBar && this.getTabBar();
+      if (tabBar) tabBar.sync(4, total);
+    });
   },
 
   onReachBottom() {

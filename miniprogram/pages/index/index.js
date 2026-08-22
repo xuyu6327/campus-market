@@ -36,8 +36,11 @@ Page({
   },
 
   onShow() {
-    // tab 页：刷新未读角标（app 全局）
-    getApp().refreshUnread();
+    // tab 页：刷新未读角标（app 全局）+ 同步自定义 tabBar 选中态
+    getApp().refreshUnread().then((total) => {
+      const tabBar = this.getTabBar && this.getTabBar();
+      if (tabBar) tabBar.sync(0, total);
+    });
   },
 
   onReachBottom() {
