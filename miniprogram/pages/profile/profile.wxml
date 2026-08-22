@@ -1,0 +1,112 @@
+<!-- 我的：个人资料 / 菜单入口 / 退出 -->
+<view class="profile-page">
+  <!-- 用户信息头 -->
+  <view class="profile-header">
+    <view class="profile-user">
+      <view class="profile-avatar">
+        <image wx:if="{{user.avatar}}" src="{{user.avatar}}" mode="aspectFill" />
+        <text wx:else>{{avatarInitial}}</text>
+      </view>
+      <view class="profile-info">
+        <view class="profile-nickname">{{user.nickname || '未登录'}}</view>
+        <view class="profile-phone">{{user.phone || '-'}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 信用分卡片 -->
+  <view class="credit-card" bindtap="goCreditLogs">
+    <view class="credit-left">
+      <view class="credit-score-circle"><text>{{user.creditScore !== undefined && user.creditScore !== null ? user.creditScore : '-'}}</text></view>
+      <view class="credit-info">
+        <view class="credit-title">信用分</view>
+        <view class="credit-desc">{{creditDesc}}</view>
+      </view>
+    </view>
+    <text class="credit-arrow">›</text>
+  </view>
+
+  <!-- 菜单 -->
+  <view class="menu-section">
+    <view class="menu-item" bindtap="goMyGoods">
+      <view class="menu-icon green">📦</view>
+      <view class="menu-label flex-1">我的发布</view>
+      <text class="menu-arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="goFavorites">
+      <view class="menu-icon orange">❤</view>
+      <view class="menu-label flex-1">我的收藏</view>
+      <text class="menu-arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="goHistory">
+      <view class="menu-icon blue">🕐</view>
+      <view class="menu-label flex-1">浏览记录</view>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="menu-section">
+    <view class="menu-item" bindtap="goOrders">
+      <view class="menu-icon purple">📋</view>
+      <view class="menu-label flex-1">我的订单</view>
+      <text class="menu-arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="goNotifications">
+      <view class="menu-icon red">🔔</view>
+      <view class="menu-label flex-1">消息通知</view>
+      <view class="menu-badge" wx:if="{{unreadTotal > 0}}">{{unreadTotal}}</view>
+      <text class="menu-arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="goReviews">
+      <view class="menu-icon yellow">⭐</view>
+      <view class="menu-label flex-1">我的评价</view>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="menu-section">
+    <view class="menu-item" bindtap="openEdit">
+      <view class="menu-icon blue">👤</view>
+      <view class="menu-label flex-1">账号设置</view>
+      <text class="menu-arrow">›</text>
+    </view>
+    <view class="menu-item" bindtap="goCreditLogs">
+      <view class="menu-icon green">📈</view>
+      <view class="menu-label flex-1">信用分记录</view>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="logout-btn" bindtap="doLogout">退出登录</view>
+
+  <!-- 编辑资料弹窗 -->
+  <view class="modal-mask" wx:if="{{showEdit}}" bindtap="closeEdit">
+    <view class="modal-sheet center" catchtap="noop">
+      <view class="modal-header">
+        <text>编辑资料</text>
+        <text class="modal-close" bindtap="closeEdit">×</text>
+      </view>
+      <view class="edit-avatar" bindtap="chooseAvatar">
+        <image wx:if="{{editAvatar}}" src="{{editAvatar}}" mode="aspectFill" />
+        <text wx:else class="edit-avatar-ph">📷</text>
+      </view>
+      <view class="avatar-hint">点击更换头像</view>
+      <view class="form-group">
+        <input class="form-input" placeholder="昵称" maxlength="50" value="{{editForm.nickname}}" data-field="nickname" bindinput="onEditInput" />
+      </view>
+      <view class="form-group">
+        <input class="form-input" placeholder="学号" maxlength="20" value="{{editForm.studentId}}" data-field="studentId" bindinput="onEditInput" />
+      </view>
+      <view class="form-group">
+        <input class="form-input" placeholder="真实姓名" maxlength="50" value="{{editForm.realName}}" data-field="realName" bindinput="onEditInput" />
+      </view>
+      <view class="form-group">
+        <input class="form-input" placeholder="微信号" maxlength="50" value="{{editForm.wechat}}" data-field="wechat" bindinput="onEditInput" />
+      </view>
+      <view class="form-group">
+        <input class="form-input" placeholder="QQ号" maxlength="20" value="{{editForm.qq}}" data-field="qq" bindinput="onEditInput" />
+      </view>
+      <button class="btn btn-primary btn-block" bindtap="saveProfile" loading="{{saving}}">保存</button>
+    </view>
+  </view>
+</view>

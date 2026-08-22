@@ -1,0 +1,60 @@
+<!-- 用户主页：公开信息 + 在售商品 + 收到的评价 + 举报 -->
+<view class="page up-page">
+
+  <!-- 用户信息 -->
+  <view class="user-header">
+    <view class="user-avatar">
+      <image wx:if="{{user.avatar}}" src="{{user.avatar}}" mode="aspectFill" />
+      <text wx:else>{{avatarInitial}}</text>
+    </view>
+    <view class="user-info flex-1">
+      <view class="user-nickname">{{user.nickname || '未知用户'}}</view>
+      <view class="user-stats">
+        <text>信用分 {{user.creditScore !== undefined && user.creditScore !== null ? user.creditScore : '-'}}</text>
+        <text>在售 {{user.onSaleCount || 0}}</text>
+        <text wx:if="{{user.goodRate !== null && user.goodRate !== undefined}}">好评率 {{user.goodRate}}%</text>
+      </view>
+    </view>
+    <view class="btn btn-sm btn-outline report-btn" bindtap="goReport">举报</view>
+  </view>
+
+  <view class="frozen-tip" wx:if="{{user.status === 0}}">该用户账号已被冻结</view>
+
+  <!-- 在售商品 -->
+  <view class="section-title">在售商品</view>
+  <view class="goods-list">
+    <view class="goods-card" wx:for="{{goodsList}}" wx:key="id" data-id="{{item.id}}" bindtap="goDetail">
+      <view class="goods-card-img">
+        <image wx:if="{{item.coverImage}}" src="{{item.coverImage}}" mode="aspectFill" />
+        <view wx:else class="img-ph">📷</view>
+      </view>
+      <view class="goods-card-body flex-1">
+        <view class="goods-card-title text-ellipsis">{{item.title}}</view>
+        <view class="goods-card-price">¥{{item.priceText}}</view>
+        <view class="goods-card-meta">{{item.conditionName}} · {{item.viewCount}}次浏览</view>
+      </view>
+    </view>
+  </view>
+  <view wx:if="{{goodsList.length === 0}}" class="empty-state">
+    <view class="empty-icon">📦</view>
+    <text>暂无在售商品</text>
+  </view>
+  <view class="load-more" wx:if="{{goodsList.length > 0}}">{{loadMoreText}}</view>
+
+  <!-- 收到的评价 -->
+  <view class="section-title">收到的评价 <text class="rate" wx:if="{{user.goodRate !== null && user.goodRate !== undefined}}">好评率 {{user.goodRate}}%</text></view>
+  <view class="review-list">
+    <view class="review-card" wx:for="{{reviews}}" wx:key="id">
+      <view class="review-user">
+        <text class="review-name">{{item.evaluatorNickname || '匿名'}}</text>
+        <text class="review-stars">{{item.starText}}</text>
+      </view>
+      <view class="review-content" wx:if="{{item.content}}">{{item.content}}</view>
+      <view class="review-time">{{item.timeAgo}}</view>
+    </view>
+  </view>
+  <view wx:if="{{reviews.length === 0}}" class="empty-state">
+    <view class="empty-icon">⭐</view>
+    <text>暂无评价</text>
+  </view>
+</view>

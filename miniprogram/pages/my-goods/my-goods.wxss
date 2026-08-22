@@ -1,0 +1,58 @@
+/* 我的发布 */
+.mygoods-page { padding-bottom: 40rpx; }
+.status-tabs {
+  display: flex;
+  background: #fff;
+  border-bottom: 2rpx solid var(--color-border);
+  padding: 0 24rpx;
+  white-space: nowrap;
+}
+.status-tab {
+  flex-shrink: 0;
+  padding: 22rpx 28rpx;
+  font-weight: 600;
+  font-size: 26rpx;
+  color: var(--color-text-tertiary);
+  position: relative;
+}
+.status-tab.active { color: var(--color-primary); }
+.status-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48rpx;
+  height: 6rpx;
+  background: var(--color-primary);
+  border-radius: 6rpx;
+}
+
+.goods-list { padding: 20rpx 24rpx; }
+.goods-card {
+  display: flex;
+  gap: 20rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 8rpx rgba(26, 26, 46, 0.04);
+}
+.goods-card-img {
+  width: 180rpx;
+  height: 180rpx;
+  flex-shrink: 0;
+  background: var(--color-surface-alt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.goods-card-img image { width: 100%; height: 100%; }
+.img-ph { font-size: 64rpx; opacity: 0.25; }
+.goods-card-body { padding: 20rpx 20rpx 20rpx 0; }
+.goods-card-title { font-weight: 600; font-size: 26rpx; }
+.goods-card-price { font-size: 30rpx; font-weight: 700; color: var(--color-primary); margin-top: 6rpx; display: flex; align-items: center; gap: 12rpx; }
+.goods-card-meta { font-size: 22rpx; color: var(--color-text-tertiary); margin-top: 6rpx; }
+.takedown-reason { font-size: 22rpx; color: var(--color-danger); margin-top: 6rpx; }
+.goods-card-actions { display: flex; gap: 16rpx; margin-top: 12rpx; }

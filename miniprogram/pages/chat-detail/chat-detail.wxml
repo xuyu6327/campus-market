@@ -1,0 +1,33 @@
+<!-- 聊天窗口：5 秒轮询增量拉取 -->
+<view class="chat-page">
+  <scroll-view class="chat-body" scroll-y scroll-into-view="{{scrollToId}}" scroll-with-animation>
+    <view wx:for="{{messages}}" wx:key="id" id="msg-{{item.id}}" class="msg-row {{item.mine ? 'mine' : 'them'}}">
+      <view class="msg-avatar">
+        <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" />
+        <text wx:else>{{item.avatarText}}</text>
+      </view>
+      <view class="msg-wrap">
+        <view class="msg-bubble">{{item.content}}</view>
+        <view class="msg-time">{{item.timeText}}</view>
+      </view>
+    </view>
+    <view wx:if="{{messages.length === 0 && !loading}}" class="empty-state">
+      <view class="empty-icon">💬</view>
+      <text>开始聊天吧</text>
+    </view>
+  </scroll-view>
+
+  <view class="chat-input-bar">
+    <input
+      class="chat-input"
+      placeholder="输入消息..."
+      maxlength="500"
+      value="{{inputText}}"
+      confirm-type="send"
+      bindinput="onInput"
+      bindconfirm="send"
+      cursor-spacing="20"
+    />
+    <view class="send-btn" bindtap="send">发送</view>
+  </view>
+</view>

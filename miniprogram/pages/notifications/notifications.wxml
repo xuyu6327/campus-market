@@ -1,0 +1,72 @@
+<!-- 消息：通知 / 私信 双 tab + 未读角标 -->
+<view class="page notif-page">
+  <view class="notif-header">
+    <view class="notif-title">消息</view>
+    <view class="read-all" wx:if="{{tab === 'notice'}}" bindtap="readAll">全部已读</view>
+  </view>
+
+  <view class="notif-tabs">
+    <view class="notif-tab {{tab === 'notice' ? 'active' : ''}}" data-tab="notice" bindtap="onTabTap">
+      通知
+      <text class="tab-badge" wx:if="{{noticeUnread > 0}}">{{noticeUnread}}</text>
+    </view>
+    <view class="notif-tab {{tab === 'chat' ? 'active' : ''}}" data-tab="chat" bindtap="onTabTap">
+      私信
+      <text class="tab-badge" wx:if="{{chatUnread > 0}}">{{chatUnread}}</text>
+    </view>
+  </view>
+
+  <!-- 通知列表 -->
+  <view class="notif-list" wx:if="{{tab === 'notice'}}">
+    <view
+      class="notif-item {{item.isRead === 0 ? 'unread' : ''}}"
+      wx:for="{{notifications}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      data-read="{{item.isRead}}"
+      data-type="{{item.type}}"
+      data-related="{{item.relatedId}}"
+      bindtap="onNotifTap"
+    >
+      <view class="notif-icon">{{item.typeIcon}}</view>
+      <view class="notif-body flex-1">
+        <view class="notif-title {{item.isRead === 0 ? 'unread' : ''}}">{{item.title}}</view>
+        <view class="notif-content text-ellipsis" wx:if="{{item.content}}">{{item.content}}</view>
+        <view class="notif-time">{{item.timeAgo}}</view>
+      </view>
+    </view>
+
+    <view wx:if="{{!loading && notifications.length === 0}}" class="empty-state">
+      <view class="empty-icon">🔔</view>
+      <text>暂无通知</text>
+    </view>
+    <view class="load-more" wx:if="{{notifications.length > 0}}">{{loadMoreText}}</view>
+  </view>
+
+  <!-- 私信会话列表 -->
+  <view class="conv-list" wx:else>
+    <view class="conv-item" wx:for="{{conversations}}" wx:key="id" data-id="{{item.id}}" bindtap="goChat">
+      <view class="conv-avatar">
+        <image wx:if="{{item.otherAvatar}}" src="{{item.otherAvatar}}" mode="aspectFill" />
+        <text wx:else>{{item.avatarInitial}}</text>
+      </view>
+      <view class="conv-main flex-1">
+        <view class="conv-top">
+          <text class="conv-name">{{item.otherNickname || '未知用户'}}</text>
+          <text class="conv-time">{{item.timeText}}</text>
+        </view>
+        <view class="conv-preview">
+          <text class="conv-preview-text text-ellipsis">{{item.lastMessage || '开始聊天吧'}}</text>
+          <text class="conv-badge" wx:if="{{item.unreadCount > 0}}">{{item.unreadCount}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{!convLoading && conversations.length === 0}}" class="empty-state">
+      <view class="empty-icon">💬</view>
+      <text>暂无会话</text>
+      <view class="sub">在商品详情页点击「私聊卖家」发起聊天</view>
+    </view>
+    <view class="load-more" wx:if="{{conversations.length > 0}}">{{convLoadMoreText}}</view>
+  </view>
+</view>

@@ -1,0 +1,88 @@
+/* 用户主页 */
+.up-page { padding-bottom: 40rpx; }
+
+.user-header {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  background: #fff;
+  padding: 40rpx 32rpx;
+}
+.user-avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48rpx;
+  font-weight: 700;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.user-avatar image { width: 100%; height: 100%; }
+.user-nickname { font-size: 36rpx; font-weight: 700; }
+.user-stats { display: flex; gap: 20rpx; font-size: 22rpx; color: var(--color-text-tertiary); margin-top: 8rpx; flex-wrap: wrap; }
+.report-btn { flex-shrink: 0; }
+
+.frozen-tip {
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+  padding: 16rpx 32rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.section-title {
+  padding: 24rpx 32rpx 8rpx;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+.section-title .rate { font-size: 22rpx; color: var(--color-star); font-weight: 600; }
+
+.goods-list { padding: 8rpx 24rpx; }
+.goods-card {
+  display: flex;
+  gap: 20rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  margin-bottom: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 8rpx rgba(26, 26, 46, 0.04);
+}
+.goods-card-img {
+  width: 160rpx;
+  height: 160rpx;
+  flex-shrink: 0;
+  background: var(--color-surface-alt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.goods-card-img image { width: 100%; height: 100%; }
+.img-ph { font-size: 56rpx; opacity: 0.25; }
+.goods-card-body { padding: 16rpx 16rpx 16rpx 0; }
+.goods-card-title { font-weight: 600; font-size: 26rpx; }
+.goods-card-price { font-size: 30rpx; font-weight: 700; color: var(--color-primary); margin-top: 4rpx; }
+.goods-card-meta { font-size: 22rpx; color: var(--color-text-tertiary); margin-top: 4rpx; }
+
+.review-list { padding: 8rpx 24rpx; }
+.review-card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(26, 26, 46, 0.04);
+}
+.review-user { display: flex; align-items: center; gap: 16rpx; }
+.review-name { font-size: 26rpx; font-weight: 600; }
+.review-stars { color: var(--color-star); font-size: 26rpx; }
+.review-content { font-size: 26rpx; color: var(--color-text-secondary); line-height: 1.6; margin-top: 6rpx; }
+.review-time { font-size: 22rpx; color: var(--color-text-tertiary); margin-top: 8rpx; }

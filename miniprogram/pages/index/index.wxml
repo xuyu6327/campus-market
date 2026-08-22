@@ -1,0 +1,108 @@
+<!-- 首页：搜索 / 分类 / 排序 / 价格成色筛选 / 商品列表（分页+热门排序） -->
+<view class="page index-page">
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <input
+      class="search-input"
+      placeholder="搜索你想要的闲置..."
+      placeholder-class="search-placeholder"
+      confirm-type="search"
+      value="{{keyword}}"
+      bindinput="onKeywordInput"
+      bindfocus="showHotPanel"
+      bindconfirm="onSearch"
+    />
+    <view class="search-btn" bindtap="onSearch">搜索</view>
+  </view>
+
+  <!-- 热门搜索 -->
+  <scroll-view class="hot-scroll" scroll-x enable-flex wx:if="{{showHot}}">
+    <view class="hot-tags">
+      <view class="hot-tag" wx:for="{{hotWords}}" wx:key="*this" data-word="{{item}}" bindtap="onHotTap">{{item}}</view>
+    </view>
+  </scroll-view>
+
+  <!-- 分类 Tabs -->
+  <scroll-view class="cat-bar" scroll-x enable-flex>
+    <view class="cat-item {{activeCat === '' ? 'active' : ''}}" data-id="" bindtap="onCatTap">全部</view>
+    <view
+      class="cat-item {{activeCat == item.id ? 'active' : ''}}"
+      wx:for="{{categories}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="onCatTap"
+    >{{item.name}}</view>
+  </scroll-view>
+
+  <!-- 排序 + 筛选 -->
+  <view class="sort-bar">
+    <view class="sort-item {{sortBy === 'newest' ? 'active' : ''}}" data-sort="newest" bindtap="onSortTap">最新</view>
+    <view class="sort-item {{sortBy === 'price_asc' ? 'active' : ''}}" data-sort="price_asc" bindtap="onSortTap">价格↑</view>
+    <view class="sort-item {{sortBy === 'price_desc' ? 'active' : ''}}" data-sort="price_desc" bindtap="onSortTap">价格↓</view>
+    <view class="sort-item {{sortBy === 'popular' ? 'active' : ''}}" data-sort="popular" bindtap="onSortTap">热门</view>
+    <view class="sort-item filter-trigger {{goodsCondition ? 'active' : ''}}" bindtap="toggleCondition">{{conditionLabel}}</view>
+    <view class="sort-item filter-trigger {{showPrice ? 'active' : ''}}" bindtap="togglePrice">价格区间</view>
+  </view>
+
+  <!-- 成色筛选 -->
+  <view class="filter-panel" wx:if="{{showCondition}}">
+    <view
+      class="filter-chip {{goodsCondition === '' ? 'active' : ''}}"
+      data-value=""
+      bindtap="onConditionTap"
+    >全部</view>
+    <view
+      class="filter-chip {{goodsCondition == item.value ? 'active' : ''}}"
+      wx:for="{{conditionOptions}}"
+      wx:key="value"
+      data-value="{{item.value}}"
+      bindtap="onConditionTap"
+    >{{item.label}}</view>
+  </view>
+
+  <!-- 价格区间 -->
+  <view class="filter-panel price-panel" wx:if="{{showPrice}}">
+    <input class="price-input" type="digit" placeholder="¥最低" value="{{minPrice}}" bindinput="onMinPriceInput" />
+    <text class="price-sep">—</text>
+    <input class="price-input" type="digit" placeholder="¥最高" value="{{maxPrice}}" bindinput="onMaxPriceInput" />
+    <view class="btn btn-primary btn-sm" bindtap="onPriceFilter">确定</view>
+  </view>
+
+  <!-- 商品列表 -->
+  <view class="goods-grid">
+    <view
+      class="goods-card"
+      wx:for="{{goodsList}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="goDetail"
+    >
+      <view class="goods-card-img">
+        <image wx:if="{{item.coverImage}}" src="{{item.coverImage}}" mode="aspectFill" lazy-load />
+        <view wx:else class="img-placeholder">📷</view>
+        <view class="goods-card-tags">
+          <view wx:if="{{item.status === 2}}" class="card-tag tag-warning">已预订</view>
+          <view wx:elif="{{item.status === 3}}" class="card-tag tag-gray">已售出</view>
+          <view wx:else class="card-tag tag-dark">{{item.conditionName}}</view>
+        </view>
+      </view>
+      <view class="goods-card-body">
+        <view class="goods-card-price">
+          <text class="currency">¥</text>{{item.priceText}}
+          <text wx:if="{{item.originalPrice > 0}}" class="original">¥{{item.originalPriceText}}</text>
+        </view>
+        <view class="goods-card-title text-clamp-2">{{item.title}}</view>
+        <view class="goods-card-meta">
+          <text class="meta-left">{{item.tradeLocation || '校内'}} · {{item.timeAgo}}</text>
+          <text>{{item.viewCount}}次浏览</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{!loading && goodsList.length === 0}}" class="empty-state">
+    <view class="empty-icon">📦</view>
+    <text>暂无商品，来看看其他分类吧</text>
+  </view>
+  <view class="load-more" wx:if="{{goodsList.length > 0}}">{{loadMoreText}}</view>
+</view>

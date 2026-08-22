@@ -1,0 +1,180 @@
+/* 首页 */
+.index-page { padding-bottom: 40rpx; }
+
+/* 搜索栏 */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 16rpx 24rpx;
+  background: #fff;
+}
+.search-input {
+  flex: 1;
+  height: 72rpx;
+  background: var(--color-surface-alt);
+  border-radius: 999rpx;
+  padding: 0 28rpx;
+  font-size: 26rpx;
+}
+.search-placeholder { color: var(--color-text-tertiary); }
+.search-btn {
+  flex-shrink: 0;
+  padding: 0 24rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 26rpx;
+}
+
+/* 热门搜索 */
+.hot-scroll { background: #fff; border-top: 2rpx solid var(--color-border); }
+.hot-tags { display: flex; gap: 16rpx; padding: 16rpx 24rpx; white-space: nowrap; }
+.hot-tag {
+  flex-shrink: 0;
+  padding: 8rpx 24rpx;
+  background: var(--color-surface-alt);
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  color: var(--color-text-secondary);
+}
+
+/* 分类 Tabs */
+.cat-bar {
+  display: flex;
+  padding: 16rpx 24rpx;
+  background: #fff;
+  border-bottom: 2rpx solid var(--color-border);
+  white-space: nowrap;
+}
+.cat-item {
+  flex-shrink: 0;
+  padding: 10rpx 28rpx;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+.cat-item.active { background: var(--color-primary); color: #fff; }
+
+/* 排序栏 */
+.sort-bar {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 16rpx 24rpx;
+  background: #fff;
+  border-bottom: 2rpx solid var(--color-border);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.sort-item {
+  flex-shrink: 0;
+  padding: 8rpx 20rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  border-radius: 10rpx;
+}
+.sort-item.active { color: var(--color-primary); background: var(--color-primary-light); }
+.filter-trigger.active { color: var(--color-secondary); background: var(--color-secondary-light); }
+
+/* 筛选面板 */
+.filter-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  padding: 16rpx 24rpx;
+  background: #fff;
+  border-bottom: 2rpx solid var(--color-border);
+  align-items: center;
+}
+.filter-chip {
+  padding: 8rpx 24rpx;
+  border: 2rpx solid var(--color-border);
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  color: var(--color-text-secondary);
+}
+.filter-chip.active { border-color: var(--color-primary); background: var(--color-primary-light); color: var(--color-primary); font-weight: 600; }
+.price-input {
+  width: 140rpx;
+  height: 60rpx;
+  border: 2rpx solid var(--color-border);
+  border-radius: 10rpx;
+  text-align: center;
+  font-size: 24rpx;
+}
+.price-sep { color: var(--color-text-tertiary); font-size: 24rpx; }
+.price-panel .btn { margin-left: auto; }
+
+/* 商品网格 */
+.goods-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding: 20rpx 24rpx;
+}
+.goods-card {
+  width: 342rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  overflow: hidden;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 8rpx rgba(26, 26, 46, 0.04);
+}
+.goods-card-img {
+  width: 342rpx;
+  height: 342rpx;
+  background: var(--color-surface-alt);
+  position: relative;
+  overflow: hidden;
+}
+.goods-card-img image { width: 100%; height: 100%; }
+.img-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 80rpx;
+  opacity: 0.25;
+}
+.goods-card-tags { position: absolute; top: 12rpx; left: 12rpx; display: flex; gap: 8rpx; }
+.card-tag {
+  padding: 4rpx 16rpx;
+  border-radius: 999rpx;
+  font-size: 20rpx;
+  font-weight: 700;
+  color: #fff;
+}
+.tag-dark { background: rgba(0, 0, 0, 0.55); }
+.goods-card-body { padding: 16rpx 20rpx 20rpx; }
+.goods-card-price {
+  font-size: 34rpx;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+.goods-card-price .currency { font-size: 22rpx; }
+.goods-card-price .original {
+  font-size: 22rpx;
+  font-weight: 400;
+  color: var(--color-text-tertiary);
+  text-decoration: line-through;
+  margin-left: 10rpx;
+}
+.goods-card-title {
+  font-size: 26rpx;
+  margin-top: 6rpx;
+  line-height: 1.4;
+}
+.goods-card-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12rpx;
+  font-size: 22rpx;
+  color: var(--color-text-tertiary);
+}
+.meta-left { max-width: 200rpx; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }

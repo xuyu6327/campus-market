@@ -1,0 +1,57 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/notifications/notifications",
+    "pages/publish/publish",
+    "pages/profile/profile",
+    "pages/favorites/favorites",
+    "pages/detail/detail",
+    "pages/auth/auth",
+    "pages/orders/orders",
+    "pages/order-detail/order-detail",
+    "pages/my-goods/my-goods",
+    "pages/history/history",
+    "pages/reviews/reviews",
+    "pages/credit-logs/credit-logs",
+    "pages/user-profile/user-profile",
+    "pages/report/report",
+    "pages/chat-detail/chat-detail"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#FF6B35",
+    "navigationBarTitleText": "校园二手",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#FFF9F5",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#9CA3AF",
+    "selectedColor": "#FF6B35",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/notifications/notifications",
+        "text": "消息"
+      },
+      {
+        "pagePath": "pages/publish/publish",
+        "text": "发布"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的"
+      },
+      {
+        "pagePath": "pages/favorites/favorites",
+        "text": "收藏"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

@@ -1,0 +1,92 @@
+<!-- 发布商品（编辑模式复用：编辑并申请上架） -->
+<view class="page publish-page">
+
+  <!-- 分类 -->
+  <view class="form-section">
+    <view class="form-section-title"><text class="required">*</text> 商品分类</view>
+    <picker range="{{catNames}}" value="{{catIndex}}" bindchange="onCatChange">
+      <view class="picker-box {{catIndex < 0 ? 'placeholder' : ''}}">{{catIndex < 0 ? '请选择分类' : catNames[catIndex]}}</view>
+    </picker>
+    <view class="form-hint" wx:if="{{isEdit}}">编辑时分类不可修改</view>
+  </view>
+
+  <!-- 标题 -->
+  <view class="form-section">
+    <view class="form-section-title"><text class="required">*</text> 商品标题</view>
+    <input class="form-input" maxlength="100" placeholder="请输入商品标题，4-30字" value="{{title}}" bindinput="onTitle" />
+    <view class="form-hint">{{title.length}}/100</view>
+  </view>
+
+  <!-- 描述 -->
+  <view class="form-section">
+    <view class="form-section-title">商品描述</view>
+    <textarea class="form-textarea" maxlength="500" placeholder="描述商品成色、规格、购买时间等信息（选填）" value="{{description}}" bindinput="onDescription" />
+    <view class="form-hint">{{description.length}}/500</view>
+  </view>
+
+  <!-- 价格 -->
+  <view class="form-section">
+    <view class="form-section-title"><text class="required">*</text> 价格</view>
+    <view class="price-row">
+      <view class="price-col">
+        <input class="form-input" type="digit" placeholder="售价" value="{{price}}" bindinput="onPrice" />
+      </view>
+      <view class="price-col">
+        <input class="form-input" type="digit" placeholder="原价（选填）" value="{{originalPrice}}" bindinput="onOriginalPrice" />
+      </view>
+    </view>
+  </view>
+
+  <!-- 成色 -->
+  <view class="form-section">
+    <view class="form-section-title"><text class="required">*</text> 商品成色</view>
+    <picker range="{{conditionNames}}" value="{{conditionIndex}}" bindchange="onConditionChange">
+      <view class="picker-box {{conditionIndex < 0 ? 'placeholder' : ''}}">{{conditionIndex < 0 ? '请选择成色' : conditionNames[conditionIndex]}}</view>
+    </picker>
+    <view class="form-hint">成色越差需上传更多图片：全新/几乎全新至少1张，轻微使用痕迹至少2张，其余至少3张</view>
+  </view>
+
+  <!-- 图片 -->
+  <view class="form-section">
+    <view class="form-section-title"><text class="required">*</text> 商品图片 <text class="form-hint-inline">至少1张，最多9张</text></view>
+    <view class="image-grid">
+      <view class="image-item" wx:for="{{images}}" wx:key="*this">
+        <image src="{{item}}" mode="aspectFill" />
+        <view class="image-remove" data-index="{{index}}" bindtap="removeImage">×</view>
+      </view>
+      <view class="upload-box" wx:if="{{images.length < 9}}" bindtap="chooseImages">
+        <text class="upload-icon">＋</text>
+        <text class="upload-count">{{images.length}}/9</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 交易地点 -->
+  <view class="form-section">
+    <view class="form-section-title">交易地点</view>
+    <input class="form-input" maxlength="50" placeholder="如一食堂、图书馆、XX宿舍楼等" value="{{tradeLocation}}" bindinput="onTradeLocation" />
+  </view>
+
+  <!-- 联系方式 -->
+  <view class="form-section">
+    <view class="form-section-title"><text class="required">*</text> 联系方式</view>
+    <view class="contact-methods">
+      <view class="contact-method {{contactMethod === 1 ? 'active' : ''}}" data-method="1" bindtap="onContactMethod">手机号</view>
+      <view class="contact-method {{contactMethod === 2 ? 'active' : ''}}" data-method="2" bindtap="onContactMethod">QQ号</view>
+      <view class="contact-method {{contactMethod === 3 ? 'active' : ''}}" data-method="3" bindtap="onContactMethod">微信号</view>
+    </view>
+    <input
+      class="form-input"
+      placeholder="{{contactPlaceholder}}"
+      maxlength="20"
+      value="{{contactValue}}"
+      bindinput="onContactValue"
+    />
+    <view class="form-hint" wx:if="{{isEdit && contactMethod === 1}}">手机号加密存储不回显，如需修改请重新填写</view>
+  </view>
+
+  <!-- 提交 -->
+  <view class="submit-bar">
+    <button class="btn btn-primary btn-block" bindtap="submit" loading="{{submitting}}">{{isEdit ? '提交审核' : '发布商品'}}</button>
+  </view>
+</view>

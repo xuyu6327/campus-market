@@ -1,0 +1,40 @@
+/* 提交举报 */
+.report-page { padding-bottom: 160rpx; }
+.report-target {
+  padding: 20rpx 32rpx;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-size: 26rpx;
+  font-weight: 600;
+}
+.form-section {
+  background: #fff;
+  margin-top: 16rpx;
+  padding: 28rpx 32rpx;
+}
+.form-section-title {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  margin-bottom: 20rpx;
+}
+.form-section-title .required { color: var(--color-danger); }
+.report-types { display: flex; flex-wrap: wrap; gap: 16rpx; }
+.report-type {
+  width: 200rpx;
+  padding: 16rpx 0;
+  text-align: center;
+  border: 3rpx solid var(--color-border);
+  border-radius: 14rpx;
+  font-size: 26rpx;
+  color: var(--color-text-secondary);
+}
+.report-type.active { border-color: var(--color-primary); background: var(--color-primary-light); color: var(--color-primary); font-weight: 600; }
+.submit-bar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  padding: 16rpx 32rpx calc(env(safe-area-inset-bottom) + 16rpx);
+  background: #fff;
+  border-top: 2rpx solid var(--color-border);
+}
+.submit-bar .btn { height: 88rpx; }

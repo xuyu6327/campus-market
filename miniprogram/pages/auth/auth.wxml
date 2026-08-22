@@ -1,0 +1,43 @@
+<!-- 登录注册 -->
+<view class="auth-page">
+  <view class="auth-logo">校园<span class="logo-accent">二手</span></view>
+  <view class="auth-slogan">闲置互换，绿色校园</view>
+
+  <!-- Tab 切换 -->
+  <view class="auth-tabs">
+    <view class="auth-tab {{mode === 'login' ? 'active' : ''}}" data-mode="login" bindtap="switchMode">登录</view>
+    <view class="auth-tab {{mode === 'register' ? 'active' : ''}}" data-mode="register" bindtap="switchMode">注册</view>
+  </view>
+
+  <!-- 登录 -->
+  <view class="auth-form" wx:if="{{mode === 'login'}}">
+    <view class="form-group">
+      <input class="form-input" placeholder="手机号或学号" value="{{account}}" bindinput="onAccount" />
+    </view>
+    <view class="form-group">
+      <input class="form-input" password placeholder="密码（6-20位）" value="{{password}}" bindinput="onPassword" />
+    </view>
+    <button class="btn btn-primary btn-block" bindtap="doLogin" loading="{{submitting}}">登 录</button>
+    <view class="auth-tip">登录失败5次将锁定15分钟；账号或密码错误提示统一</view>
+  </view>
+
+  <!-- 注册 -->
+  <view class="auth-form" wx:else>
+    <view class="form-group">
+      <input class="form-input" type="number" placeholder="手机号（11位）" maxlength="11" value="{{rPhone}}" bindinput="onRPhone" />
+    </view>
+    <view class="form-group">
+      <input class="form-input" password placeholder="密码（6-20位）" value="{{rPassword}}" bindinput="onRPassword" />
+    </view>
+    <view class="form-group">
+      <input class="form-input" placeholder="昵称（必填）" maxlength="50" value="{{rNickname}}" bindinput="onRNickname" />
+    </view>
+    <view class="form-group">
+      <input class="form-input" placeholder="学号（选填）" maxlength="20" value="{{rStudentId}}" bindinput="onRStudentId" />
+    </view>
+    <view class="form-group">
+      <input class="form-input" placeholder="真实姓名（选填）" maxlength="50" value="{{rRealName}}" bindinput="onRRealName" />
+    </view>
+    <button class="btn btn-primary btn-block" bindtap="doRegister" loading="{{submitting}}">注 册</button>
+  </view>
+</view>

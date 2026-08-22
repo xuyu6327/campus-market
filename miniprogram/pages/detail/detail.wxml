@@ -1,0 +1,129 @@
+<!-- 商品详情：轮播 / 收藏 / 私聊 / 预订弹窗 / 举报 -->
+<view class="page detail-page">
+
+  <!-- 轮播 -->
+  <swiper
+    class="carousel"
+    wx:if="{{images.length > 0}}"
+    indicator-dots="{{images.length > 1}}"
+    indicator-color="rgba(255,255,255,0.5)"
+    indicator-active-color="#ffffff"
+    circular
+  >
+    <swiper-item wx:for="{{images}}" wx:key="*this">
+      <image src="{{item}}" mode="aspectFill" />
+    </swiper-item>
+  </swiper>
+  <view wx:else class="carousel empty-carousel">📷</view>
+
+  <!-- 卖家冻结提示 -->
+  <view class="frozen-bar" wx:if="{{detail.sellerStatus === 0}}">该卖家账号已被冻结，请注意交易安全，建议暂停交易</view>
+
+  <!-- 商品信息 -->
+  <view class="section">
+    <view class="price-row">
+      <view class="price"><text class="currency">¥</text>{{priceText}}</view>
+      <view class="original" wx:if="{{detail.originalPrice > 0}}">¥{{originalPriceText}}</view>
+      <view class="condition-tag">{{conditionName}}</view>
+    </view>
+    <view class="title">{{detail.title}}</view>
+    <view class="meta">
+      <text>{{detail.categoryName || '-'}}</text>
+      <text>{{detail.tradeLocation || '校内'}}</text>
+      <text>{{detail.viewCount}}次浏览</text>
+      <text>{{timeAgo}}</text>
+    </view>
+  </view>
+
+  <!-- 商品描述 -->
+  <view class="section">
+    <view class="section-title">商品描述</view>
+    <text class="desc">{{detail.description || '暂无描述'}}</text>
+  </view>
+
+  <!-- 卖家信息 -->
+  <view class="section seller-section" bindtap="goSellerProfile">
+    <view class="seller-avatar">
+      <image wx:if="{{sellerAvatar}}" src="{{sellerAvatar}}" mode="aspectFill" />
+      <text wx:else>{{sellerInitial}}</text>
+    </view>
+    <view class="seller-info flex-1">
+      <view class="seller-name">{{detail.sellerNickname || '未知用户'}}</view>
+      <view class="seller-stats">信用分: {{detail.sellerCreditScore || 0}}</view>
+    </view>
+    <text class="seller-arrow">›</text>
+  </view>
+
+  <!-- 卖家评价 -->
+  <view class="section">
+    <view class="section-title">
+      卖家评价
+      <text class="rate" wx:if="{{goodRate !== null}}">好评率 {{goodRate}}%</text>
+    </view>
+    <view wx:if="{{reviews.length === 0}}" class="no-review">暂无评价</view>
+    <view class="review-item" wx:for="{{reviews}}" wx:key="id">
+      <view class="review-user">
+        <text class="review-name">{{item.evaluatorNickname || '匿名'}}</text>
+        <text class="review-stars">{{item.starText}}</text>
+      </view>
+      <view class="review-content" wx:if="{{item.content}}">{{item.content}}</view>
+      <view class="review-time">{{item.timeAgo}}</view>
+    </view>
+  </view>
+
+  <!-- 举报入口 -->
+  <view class="section report-entry" bindtap="openReport">
+    <text>举报该商品</text>
+    <text class="arrow">›</text>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-bar">
+    <view class="btn-fav" bindtap="toggleFavorite">
+      <text class="heart {{detail.favorited ? 'liked' : ''}}">{{detail.favorited ? '♥' : '♡'}}</text>
+      <text class="fav-count">{{detail.favoriteCount || 0}}</text>
+    </view>
+    <view class="btn-chat" wx:if="{{!detail.isOwner && !isGuest}}" bindtap="startChat">私聊</view>
+    <view class="btn-book {{bookBtnClass}}" bindtap="onBookTap">{{bookBtnText}}</view>
+  </view>
+
+  <!-- 预订弹窗 -->
+  <view class="modal-mask" wx:if="{{showBookModal}}" bindtap="closeBookModal">
+    <view class="modal-sheet" catchtap="noop">
+      <view class="modal-header">
+        <text>确认预订</text>
+        <text class="modal-close" bindtap="closeBookModal">×</text>
+      </view>
+      <view class="book-goods">
+        <text class="book-title text-ellipsis flex-1">{{detail.title}}</text>
+        <text class="book-price">¥{{priceText}}</text>
+      </view>
+      <input class="form-input book-input" type="number" placeholder="手机号（选填，如 13812345678）" maxlength="11" value="{{bookPhone}}" bindinput="onBookPhone" />
+      <input class="form-input book-input" type="number" placeholder="QQ号（选填，如 123456789）" maxlength="15" value="{{bookQq}}" bindinput="onBookQq" />
+      <input class="form-input book-input" placeholder="微信号（选填，如 wx_123456）" maxlength="20" value="{{bookWechat}}" bindinput="onBookWechat" />
+      <view class="book-tip">请至少填写一种联系方式，方便卖家联系您完成交易。填写后<text class="strong">仅该订单的卖家可见</text>，用于本次交易。</view>
+      <button class="btn btn-primary btn-block" bindtap="submitBook">确认预订</button>
+    </view>
+  </view>
+
+  <!-- 举报弹窗 -->
+  <view class="modal-mask" wx:if="{{showReportModal}}" bindtap="closeReport">
+    <view class="modal-sheet" catchtap="noop">
+      <view class="modal-header">
+        <text>举报商品</text>
+        <text class="modal-close" bindtap="closeReport">×</text>
+      </view>
+      <view class="report-types">
+        <view
+          class="report-type {{reportReasonIndex === index ? 'active' : ''}}"
+          wx:for="{{reportReasons}}"
+          wx:key="*this"
+          data-index="{{index}}"
+          bindtap="onReportReason"
+        >{{item}}</view>
+      </view>
+      <textarea class="form-textarea" placeholder="请描述具体情况..." maxlength="1000" value="{{reportDesc}}" bindinput="onReportDesc" />
+      <button class="btn btn-primary btn-block" bindtap="submitReport">提交举报</button>
+    </view>
+  </view>
+</view>
