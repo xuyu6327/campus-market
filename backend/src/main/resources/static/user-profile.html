@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>用户主页 - 校园二手交易平台</title><link rel="stylesheet" href="common.css">
+<style>
+.up-page{background:var(--color-bg);min-height:100vh;padding-bottom:40px;}
+/* 用户信息卡 */
+.up-card{display:flex;align-items:center;gap:var(--space-lg);padding:24px var(--space-lg);background:var(--color-surface);margin-bottom:var(--space-sm);}
+.up-avatar{width:72px;height:72px;border-radius:50%;background:var(--color-primary-light);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:var(--color-primary);flex-shrink:0;overflow:hidden;}
+.up-avatar img{width:100%;height:100%;object-fit:cover;}
+.up-info{flex:1;min-width:0;}
+.up-nickname{font-size:var(--font-size-lg);font-weight:800;}
+.up-meta{font-size:var(--font-size-sm);color:var(--color-text-secondary);margin-top:6px;display:flex;gap:14px;flex-wrap:wrap;}
+.up-meta .score{color:var(--color-primary);font-weight:700;}
+.up-meta .rate{color:var(--color-star);font-weight:700;}
+.up-stats{font-size:var(--font-size-xs);color:var(--color-text-tertiary);margin-top:4px;}
+.frozen-bar{background:var(--color-danger-light);color:var(--color-danger);padding:10px 16px;font-size:var(--font-size-sm);font-weight:600;text-align:center;margin-bottom:var(--space-sm);}
+/* 分区标题 */
+.section-title{padding:var(--space-md) var(--space-lg) var(--space-sm);font-size:var(--font-size-sm);font-weight:700;color:var(--color-text-secondary);}
+.section-title .count{font-size:var(--font-size-xs);color:var(--color-text-tertiary);font-weight:400;margin-left:6px;}
+/* 在售商品网格 */
+.goods-grid{padding:0 var(--space-lg);display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md);}
+.product-card{background:var(--color-surface);border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-sm);cursor:pointer;}
+.product-card-img{width:100%;aspect-ratio:1;background:var(--color-surface-alt);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.product-card-img img{width:100%;height:100%;object-fit:cover;}
+.product-card-body{padding:10px 12px 12px;}
+.product-card-price{font-size:var(--font-size-base);font-weight:800;color:var(--color-primary);}
+.product-card-title{font-size:var(--font-size-sm);margin-top:4px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.product-card-meta{font-size:var(--font-size-xs);color:var(--color-text-tertiary);margin-top:4px;}
+/* 评价区 */
+.review-list{padding:0 var(--space-lg);}
+.review-card{background:var(--color-surface);border-radius:var(--radius-md);padding:14px 16px;margin-bottom:var(--space-sm);box-shadow:var(--shadow-sm);}
+.review-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.review-stars{color:var(--color-star);font-size:14px;}
+.review-name{font-size:var(--font-size-xs);color:var(--color-text-tertiary);}
+.review-content{font-size:var(--font-size-sm);color:var(--color-text-secondary);line-height:1.6;}
+.review-time{font-size:var(--font-size-xs);color:var(--color-text-tertiary);margin-top:4px;}
+</style>
+</head>
+<body>
+<div class="up-page">
+  <div class="page-header">
+    <span class="page-header-back" onclick="history.back()">←</span>
+    <span class="page-header-title">用户主页</span>
+    <a class="page-header-home" href="index.html"><i class="icon" data-icon="home"></i></a>
+  </div>
+
+  <!-- 用户信息卡 -->
+  <div class="up-card">
+    <div class="up-avatar" id="upAvatar">?</div>
+    <div class="up-info">
+      <div class="up-nickname" id="upNickname">-</div>
+      <div class="up-meta">
+        <span>信用分 <span class="score" id="upScore">-</span></span>
+        <span>好评率 <span class="rate" id="upRate">-</span></span>
+      </div>
+      <div class="up-stats" id="upStats">在售 0 件</div>
+    </div>
+  </div>
+  <div class="frozen-bar" id="frozenBar" style="display:none"><i class="icon" data-icon="shield"></i> 该用户账号已被冻结</div>
+
+  <!-- 在售商品 -->
+  <div class="section-title">在售商品<span class="count" id="goodsCount"></span></div>
+  <div class="goods-grid" id="goodsGrid"><div class="loading" style="grid-column:1/-1">加载中...</div></div>
+
+  <!-- 收到的评价 -->
+  <div class="section-title">收到的评价<span class="count" id="reviewCount"></span></div>
+  <div class="review-list" id="reviewList"><div class="loading">加载中...</div></div>
+
+</div>
+<div class="toast toast-global"></div>
+<script src="api.js"></script>
+<script src="icons.js"></script>
+<script>
+(function() {
+  var userId = getQueryParam('id');
+  if (!userId) { showToast('缺少用户ID'); window.location.href = 'index.html'; return; }
+
+  function escapeHtml(t) { if (t === null || t === undefined) return ''; return String(t).replace(/[&<>"']/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+  var goodsPage = 1, goodsHasMore = true, goodsLoading = false;
+  var reviewPage = 1, reviewHasMore = true, reviewLoading = false;
+
+  // === 加载用户信息 ===
+  loadProfile();
+  function loadProfile() {
+    get('/user/' + userId + '/profile', {}, { noAuth: true, noToast: true })
+      .then(function(p) {
+        var avatarEl = document.getElementById('upAvatar');
+        if (p.avatar) { avatarEl.innerHTML = '<img src="' + p.avatar + '" alt="avatar">'; }
+        else { avatarEl.textContent = p.nickname ? p.nickname.charAt(0) : '?'; }
+        document.getElementById('upNickname').textContent = p.nickname || '未知用户';
+        document.getElementById('upScore').textContent = p.creditScore != null ? p.creditScore : '-';
+        document.getElementById('upRate').textContent = (p.goodRate != null ? p.goodRate : 100) + '%';
+        document.getElementById('upStats').textContent = '在售 ' + (p.onSaleCount || 0) + ' 件';
+        document.getElementById('goodsCount').textContent = '· ' + (p.onSaleCount || 0) + ' 件';
+        if (p.status === 0) {
+          document.getElementById('frozenBar').style.display = 'flex';
+        }
+      })
+      .catch(function(err) { document.getElementById('upNickname').textContent = '加载失败'; });
+  }
+
+  // === 在售商品 ===
+  loadGoods();
+  function loadGoods() {
+    if (goodsLoading || !goodsHasMore) return;
+    goodsLoading = true;
+    get('/goods/user/' + userId, { pageNum: goodsPage, pageSize: 10 }, { noAuth: true, noToast: true })
+      .then(function(page) {
+        goodsLoading = false;
+        var list = page.records || [];
+        var el = document.getElementById('goodsGrid');
+        if (goodsPage === 1 && list.length === 0) {
+          el.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><i class="empty-icon" data-icon="box"></i><p>暂无在售商品</p></div>';
+        } else {
+          var html = list.map(function(g) { return goodsCard(g); }).join('');
+          el.innerHTML = goodsPage === 1 ? html : el.innerHTML + html;
+          bindGoodsClicks();
+        }
+        goodsHasMore = list.length >= 10;
+        goodsPage++;
+      })
+      .catch(function() { goodsLoading = false; });
+  }
+  function goodsCard(g) {
+    var img = g.coverImage ? '<img src="' + g.coverImage + '" alt="">' : '<i class="ph-icon" data-icon="box"></i>';
+    return '<div class="product-card" data-id="' + g.id + '"><div class="product-card-img">' + img + '</div><div class="product-card-body"><div class="product-card-price">¥' + Number(g.price || 0).toFixed(0) + '</div><div class="product-card-title">' + escapeHtml(g.title || '') + '</div><div class="product-card-meta">' + timeAgo(g.createTime) + '</div></div></div>';
+  }
+  function bindGoodsClicks() {
+    document.querySelectorAll('#goodsGrid .product-card').forEach(function(c) {
+      if (c.dataset.bound) return;
+      c.dataset.bound = '1';
+      c.addEventListener('click', function() { window.location.href = 'detail.html?id=' + this.dataset.id; });
+    });
+  }
+
+  // === 收到的评价 ===
+  loadReviews();
+  function loadReviews() {
+    if (reviewLoading || !reviewHasMore) return;
+    reviewLoading = true;
+    get('/review/user/' + userId, { pageNum: reviewPage, pageSize: 10 }, { noAuth: true, noToast: true })
+      .then(function(data) {
+        reviewLoading = false;
+        var list = data.records || [];
+        document.getElementById('reviewCount').textContent = '· ' + (data.totalCount || 0) + ' 条 · 好评率 ' + (data.goodRate != null ? data.goodRate : 100) + '%';
+        var el = document.getElementById('reviewList');
+        if (reviewPage === 1 && list.length === 0) {
+          el.innerHTML = '<div class="empty-state"><i class="empty-icon" data-icon="star"></i><p>暂无评价</p></div>';
+        } else {
+          var html = list.map(function(r) { return reviewCard(r); }).join('');
+          el.innerHTML = reviewPage === 1 ? html : el.innerHTML + html;
+        }
+        reviewHasMore = list.length >= 10;
+        reviewPage++;
+      })
+      .catch(function() { reviewLoading = false; });
+  }
+  function reviewCard(r) {
+    var stars = ''; for (var i = 0; i < (r.score || 0); i++) stars += '★';
+    var name = r.isAnonymous === 1 ? (escapeHtml(r.evaluatorNickname) || '匿名') : (escapeHtml(r.evaluatorNickname) || '用户');
+    return '<div class="review-card"><div class="review-top"><span class="review-stars">' + stars + '</span><span class="review-name">' + name + '</span></div>' + (r.content ? '<div class="review-content">' + escapeHtml(r.content) + '</div>' : '') + '<div class="review-time">' + timeAgo(r.createTime) + '</div></div>';
+  }
+
+  // === 滚动加载 ===
+  window.addEventListener('scroll', function() {
+    var sh = document.documentElement.scrollHeight, st = window.scrollY || document.documentElement.scrollTop, ch = document.documentElement.clientHeight;
+    if (sh - st - ch < 300) {
+      if (goodsHasMore && !goodsLoading) loadGoods();
+      if (reviewHasMore && !reviewLoading) loadReviews();
+    }
+  });
+
+  function getQueryParam(name) { var m = window.location.search.match(new RegExp('[?&]' + name + '=([^&]*)')); return m ? decodeURIComponent(m[1]) : null; }
+})();
+</script>
+</body>
+</html>

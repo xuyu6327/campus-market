@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理后台</title>
+<link rel="stylesheet" href="../common.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<!-- 顶栏 -->
+<div class="admin-topbar">
+  <div class="admin-logo">
+    <span class="logo-badge"><i class="icon" data-icon="settings"></i></span>
+    校园二手 · 管理后台
+  </div>
+  <div class="topbar-right">
+    <a href="../index.html" class="btn btn-ghost btn-sm"><i class="icon" data-icon="home"></i>返回前台</a>
+    <span class="admin-user"><i class="icon" data-icon="user"></i><span id="adminName">管理员</span></span>
+    <button class="btn btn-outline btn-sm" id="logoutBtn">退出</button>
+  </div>
+</div>
+
+<!-- 侧边导航 -->
+<div class="admin-sidebar">
+  <div class="nav-item active" data-page="dashboard.html"><i class="icon" data-icon="chart"></i>仪表盘</div>
+  <div class="nav-item" data-page="users.html"><i class="icon" data-icon="user"></i>用户管理</div>
+  <div class="nav-item" data-page="goods.html"><i class="icon" data-icon="box"></i>商品管理</div>
+  <div class="nav-item" data-page="orders.html"><i class="icon" data-icon="doc"></i>订单管理</div>
+  <div class="nav-item" data-page="reports.html"><i class="icon" data-icon="flag"></i>举报管理</div>
+  <div class="nav-item" data-page="categories.html"><i class="icon" data-icon="grid"></i>分类管理</div>
+</div>
+
+<!-- 内容区 -->
+<div class="admin-main">
+  <iframe src="dashboard.html" class="admin-frame" id="mainFrame"></iframe>
+</div>
+
+<script src="../api.js"></script>
+<script src="../icons.js"></script>
+<script src="common.js"></script>
+<script>
+/* 权限守卫 */
+requireAdmin().then(function (ok) {
+  if (!ok) return;
+  renderAdminName('adminName');
+});
+
+/* 导航切换 */
+var navItems = document.querySelectorAll('.admin-sidebar .nav-item');
+function setActive(page) {
+  navItems.forEach(function (n) {
+    n.classList.toggle('active', n.getAttribute('data-page') === page);
+  });
+}
+navItems.forEach(function (n) {
+  n.onclick = function () {
+    var page = n.getAttribute('data-page');
+    document.getElementById('mainFrame').src = page;
+    setActive(page);
+  };
+});
+/* 供 iframe 内子页面调用（common.js 的 goPage） */
+window.adminNav = function (page) {
+  document.getElementById('mainFrame').src = page;
+  setActive(page);
+};
+
+/* 退出登录 */
+document.getElementById('logoutBtn').onclick = function () {
+  clearLogin();
+  window.location.href = '../index.html';
+};
+</script>
+</body>
+</html>

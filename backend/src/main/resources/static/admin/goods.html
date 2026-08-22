@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>商品管理 - 管理后台</title>
+<link rel="stylesheet" href="../common.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<div class="admin-page">
+  <div class="admin-page-header">
+    <div>
+      <h1>商品管理</h1>
+      <div class="sub">搜索商品、查看详情（含解密联系方式）、强制下架违规商品</div>
+    </div>
+  </div>
+
+  <!-- 筛选 -->
+  <div class="filter-bar">
+    <input class="form-input filter-input" id="keywordInput" placeholder="商品标题 / 描述 / 卖家">
+    <select class="filter-select" id="statusSelect">
+      <option value="">全部状态</option>
+      <option value="1">在售</option>
+      <option value="2">预订中</option>
+      <option value="3">已售出</option>
+      <option value="4">待审核</option>
+      <option value="0">已下架</option>
+    </select>
+    <button class="btn btn-primary btn-sm" id="searchBtn"><i class="icon" data-icon="search"></i>搜索</button>
+    <button class="btn btn-ghost btn-sm" id="resetBtn">重置</button>
+  </div>
+
+  <!-- 列表 -->
+  <div class="admin-card">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>商品</th>
+          <th>分类</th>
+          <th>价格</th>
+          <th>成色</th>
+          <th>状态</th>
+          <th>浏览/收藏</th>
+          <th>发布时间</th>
+          <th style="min-width:150px">操作</th>
+        </tr>
+      </thead>
+      <tbody id="goodsBody">
+        <tr><td colspan="8"><div class="loading">加载中...</div></td></tr>
+      </tbody>
+    </table>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</div>
+
+<script src="../api.js"></script>
+<script src="../icons.js"></script>
+<script src="common.js"></script>
+<script>
+var CONDITION_DESCS = { 1: '全新未拆', 2: '几乎全新', 3: '轻微使用痕迹', 4: '明显使用痕迹', 5: '故障/坏件', 6: '故障/坏件' };
+var GOODS_STATUS = {
+  0: { text: '已下架', cls: 'tag-secondary' },
+  1: { text: '在售', cls: 'tag-success' },
+  2: { text: '预订中', cls: 'tag-warning' },
+  3: { text: '已售出', cls: 'tag-info' },
+  4: { text: '待审核', cls: 'tag-warning' }
+};
+
+var pageNum = 1, pageSize = 10;
+var keyword = '', status = '';
+
+function loadGoods() {
+  document.getElementById('goodsBody').innerHTML = '<tr><td colspan="8"><div class="loading">加载中...</div></td></tr>';
+  var params = { pageNum: pageNum, pageSize: pageSize };
+  if (keyword) params.keyword = keyword;
+  if (status !== '') params.status = parseInt(status, 10);
+  get('/admin/goods/list', params).then(function (page) {
+    page = page || {};
+    var list = page.records || [];
+    if (!list.length) {
+      document.getElementById('goodsBody').innerHTML = '<tr><td colspan="8"><div class="empty-wrap">暂无商品数据</div></td></tr>';
+    } else {
+      document.getElementById('goodsBody').innerHTML = list.map(renderRow).join('');
+    }
+    renderPagination('pagination', page, function (p) { pageNum = p; loadGoods(); });
+  }).catch(function () {
+    document.getElementById('goodsBody').innerHTML = '<tr><td colspan="8"><div class="empty-wrap">加载失败</div></td></tr>';
+  });
+}
+
+function renderRow(g) {
+  var imgs = parseImages(g.images);
+  var thumb = imgs.length
+    ? '<span class="thumb"><img src="' + escapeHtml(imgs[0]) + '" alt=""></span>'
+    : '<span class="thumb"><i class="icon" data-icon="image"></i></span>';
+  var st = GOODS_STATUS[g.status] || GOODS_STATUS[0];
+  var condition = CONDITION_DESCS[g.goodsCondition] || g.conditionDesc || '未知';
+  var ops = '<button class="op-btn" data-act="detail" data-id="' + g.id + '">详情</button>';
+  if (g.status === 4) {
+    ops += '<button class="op-btn success" data-act="review" data-id="' + g.id + '">审核</button>';
+  }
+  if (g.status !== 0 && g.status !== 4) {
+    ops += '<button class="op-btn danger" data-act="takedown" data-id="' + g.id + '">强制下架</button>';
+  }
+  if (g.status === 0) {
+    ops += g.takedownBy === 1
+      ? '<button class="op-btn disabled">已强制下架</button>'
+      : '<button class="op-btn disabled">已下架</button>';
+  }
+  var downFlag = (g.takedownBy === 1 && g.status !== 1)
+    ? '<div class="cell-sub" style="color:var(--color-danger);font-size:11px">强制下架</div>'
+    : '';
+  return '<tr>' +
+    '<td><div style="display:flex;align-items:center;gap:10px">' + thumb +
+    '<div><div class="cell-title">' + escapeHtml(g.title || '-') + '</div>' + downFlag + '</div></div></td>' +
+    '<td>' + escapeHtml(g.categoryName || '-') + '</td>' +
+    '<td style="color:var(--color-primary);font-weight:700">' + formatPrice(g.price) + '</td>' +
+    '<td class="cell-sub">' + escapeHtml(condition) + '</td>' +
+    '<td><span class="tag ' + st.cls + '">' + st.text + '</span></td>' +
+    '<td class="cell-sub">' + (g.viewCount || 0) + ' / ' + (g.favoriteCount || 0) + '</td>' +
+    '<td class="cell-sub">' + escapeHtml((g.createTime || '').replace('T', ' ').slice(0, 19)) + '</td>' +
+    '<td>' + ops + '</td>' +
+    '</tr>';
+}
+
+/* ---- 操作事件 ---- */
+document.getElementById('goodsBody').onclick = function (e) {
+  var btn = e.target.closest('.op-btn');
+  if (!btn || btn.classList.contains('disabled')) return;
+  var act = btn.getAttribute('data-act');
+  var id = parseInt(btn.getAttribute('data-id'), 10);
+  if (act === 'detail') showDetail(id);
+  else if (act === 'takedown') takedown(id);
+  else if (act === 'review') openReviewModal(id);
+};
+
+/* ---- 详情（解密联系方式） ---- */
+function showDetail(id) {
+  get('/admin/goods/' + id).then(function (g) {
+    g = g || {};
+    var imgs = parseImages(g.images);
+    var thumbs = imgs.map(function (src) {
+      return '<img src="' + escapeHtml(src) + '" alt="">';
+    }).join('');
+    var contact = '-';
+    if (g.contactMethod == 1) contact = '手机 ' + escapeHtml(g.contactPhone || '-');
+    else if (g.contactMethod == 2) contact = 'QQ ' + escapeHtml(g.contactQq || '-');
+    else if (g.contactMethod == 3) contact = '微信 ' + escapeHtml(g.contactWechat || '-');
+    var st = GOODS_STATUS[g.status] || GOODS_STATUS[0];
+    var condition = CONDITION_DESCS[g.goodsCondition] || g.conditionDesc || '未知';
+    var html =
+      '<div class="detail-grid">' +
+      '<div class="detail-item full"><div class="k">标题</div><div class="v">' + escapeHtml(g.title || '-') + '</div></div>' +
+      '<div class="detail-item"><div class="k">卖家</div><div class="v">' + escapeHtml(g.sellerNickname || 'ID:' + (g.sellerId || '-')) + '</div></div>' +
+      '<div class="detail-item"><div class="k">分类</div><div class="v">' + escapeHtml(g.categoryName || '-') + '</div></div>' +
+      '<div class="detail-item"><div class="k">价格</div><div class="v" style="color:var(--color-primary)">' + formatPrice(g.price) + '</div></div>' +
+      '<div class="detail-item"><div class="k">原价</div><div class="v">' + (g.originalPrice ? formatPrice(g.originalPrice) : '-') + '</div></div>' +
+      '<div class="detail-item"><div class="k">成色</div><div class="v">' + escapeHtml(condition) + '</div></div>' +
+      '<div class="detail-item"><div class="k">状态</div><div class="v"><span class="tag ' + st.cls + '">' + st.text + '</span></div></div>' +
+      (g.takedownReason ? '<div class="detail-item full"><div class="k">强制下架原因</div><div class="v">' + escapeHtml(g.takedownReason) + '</div></div>' : '') +
+      '<div class="detail-item"><div class="k">浏览/收藏</div><div class="v">' + (g.viewCount || 0) + ' / ' + (g.favoriteCount || 0) + '</div></div>' +
+      '<div class="detail-item"><div class="k">交易地点</div><div class="v">' + escapeHtml(g.tradeLocation || '-') + '</div></div>' +
+      '<div class="detail-item"><div class="k">联系方式（解密）</div><div class="v">' + contact + '</div></div>' +
+      '<div class="detail-item"><div class="k">重新上架时间</div><div class="v">' + escapeHtml((g.lastRelistedAt || '-').replace('T', ' ').slice(0, 19)) + '</div></div>' +
+      '<div class="detail-item"><div class="k">发布时间</div><div class="v">' + escapeHtml((g.createTime || '-').replace('T', ' ').slice(0, 19)) + '</div></div>' +
+      '<div class="detail-item full"><div class="k">描述</div><div class="detail-desc">' + escapeHtml(g.description || '无') + '</div></div>' +
+      (thumbs ? '<div class="detail-item full"><div class="k">图片</div><div class="img-thumbs">' + thumbs + '</div></div>' : '') +
+      '</div>';
+    alertDialog('商品详情 #' + (g.id || ''), html);
+  }).catch(function () {});
+}
+
+/* ---- 强制下架（带原因，卖家需修改后提交审核才能重新上架） ---- */
+function takedown(id) {
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay show';
+  overlay.innerHTML =
+    '<div class="modal-content">' +
+    '<div class="modal-header"><span>强制下架</span><button class="modal-close" id="tClose">&times;</button></div>' +
+    '<p class="confirm-text">下架后卖家需修改商品并提交审核，审核通过后才能重新上架。</p>' +
+    '<div class="form-group"><label class="form-label">下架原因（必填，展示给卖家）</label>' +
+    '<textarea class="form-input" id="tReason" rows="2" maxlength="200" placeholder="如：标题包含违禁词"></textarea></div>' +
+    '<div class="confirm-actions">' +
+    '<button class="btn btn-ghost" id="tCancel">取消</button>' +
+    '<button class="btn btn-danger" id="tOk">确认下架</button>' +
+    '</div></div>';
+  document.body.appendChild(overlay);
+  function close() { overlay.remove(); }
+  overlay.querySelector('#tClose').onclick = close;
+  overlay.querySelector('#tCancel').onclick = close;
+  overlay.onclick = function (e) { if (e.target === overlay) close(); };
+  overlay.querySelector('#tOk').onclick = async function () {
+    var reason = document.getElementById('tReason').value.trim();
+    if (!reason) { showToast('请填写下架原因'); return; }
+    var btn = this;
+    btn.disabled = true;
+    try {
+      await put('/admin/goods/' + id + '/takedown', { reason: reason });
+      showToast('已强制下架');
+      close();
+      loadGoods();
+    } catch (e) { btn.disabled = false; }
+  };
+}
+
+/* ---- 审核重新上架申请 ---- */
+function openReviewModal(id) {
+  get('/admin/goods/' + id).then(function (g) {
+    g = g || {};
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay show';
+    overlay.innerHTML =
+      '<div class="modal-content admin-modal-lg">' +
+      '<div class="modal-header"><span>审核重新上架</span><button class="modal-close" id="rClose">&times;</button></div>' +
+      '<div class="detail-grid" style="margin-bottom:16px">' +
+      '<div class="detail-item full"><div class="k">商品</div><div class="v">' + escapeHtml(g.title || '-') + '</div></div>' +
+      '<div class="detail-item"><div class="k">价格</div><div class="v">' + formatPrice(g.price) + '</div></div>' +
+      '<div class="detail-item"><div class="k">卖家</div><div class="v">' + escapeHtml(g.sellerNickname || '-') + '</div></div>' +
+      '<div class="detail-item"><div class="k">原下架原因</div><div class="v">' + escapeHtml(g.takedownReason || '-') + '</div></div>' +
+      '<div class="detail-item full"><div class="k">描述</div><div class="detail-desc">' + escapeHtml(g.description || '无') + '</div></div>' +
+      '</div>' +
+      '<div class="form-group"><label class="form-label">审核结果</label>' +
+      '<div class="radio-group" id="reviewGroup">' +
+      '<label class="radio-item" data-v="1"><input type="radio" name="rResult" value="1" checked><span>通过（重新上架）</span></label>' +
+      '<label class="radio-item" data-v="0"><input type="radio" name="rResult" value="0"><span>驳回（保持下架）</span></label>' +
+      '</div></div>' +
+      '<div class="form-group" id="rReasonGroup" style="display:none"><label class="form-label">驳回原因（必填）</label>' +
+      '<textarea class="form-input" id="rReason" rows="2" maxlength="200" placeholder="说明驳回原因，卖家可见"></textarea></div>' +
+      '<div class="confirm-actions">' +
+      '<button class="btn btn-ghost" id="rCancel">取消</button>' +
+      '<button class="btn btn-primary" id="rOk">提交审核</button>' +
+      '</div></div>';
+    document.body.appendChild(overlay);
+    function close() { overlay.remove(); }
+    overlay.querySelector('#rClose').onclick = close;
+    overlay.querySelector('#rCancel').onclick = close;
+    overlay.onclick = function (e) { if (e.target === overlay) close(); };
+    var radios = overlay.querySelectorAll('#reviewGroup .radio-item');
+    radios.forEach(function (item) {
+      item.onclick = function () {
+        radios.forEach(function (x) { x.classList.remove('selected'); });
+        item.classList.add('selected');
+        var approve = item.getAttribute('data-v') === '1';
+        document.getElementById('rReasonGroup').style.display = approve ? 'none' : 'block';
+      };
+    });
+    overlay.querySelector('#reviewGroup .radio-item[data-v="1"]').classList.add('selected');
+    overlay.querySelector('#rOk').onclick = async function () {
+      var approve = overlay.querySelector('#reviewGroup input:checked').value === '1';
+      var reason = document.getElementById('rReason').value.trim();
+      if (!approve && !reason) { showToast('请填写驳回原因'); return; }
+      var btn = this;
+      btn.disabled = true;
+      try {
+        await put('/admin/goods/' + id + '/review', { approve: approve, reason: reason });
+        showToast(approve ? '已通过审核，商品已上架' : '已驳回');
+        close();
+        loadGoods();
+      } catch (e) { btn.disabled = false; }
+    };
+  }).catch(function () {});
+}
+
+/* ---- 筛选事件 ---- */
+function doSearch() {
+  keyword = document.getElementById('keywordInput').value.trim();
+  status = document.getElementById('statusSelect').value;
+  pageNum = 1;
+  loadGoods();
+}
+document.getElementById('searchBtn').onclick = doSearch;
+document.getElementById('keywordInput').onkeydown = function (e) { if (e.key === 'Enter') doSearch(); };
+document.getElementById('resetBtn').onclick = function () {
+  document.getElementById('keywordInput').value = '';
+  document.getElementById('statusSelect').value = '';
+  doSearch();
+};
+
+requireAdmin().then(function (ok) {
+  if (!ok) return;
+  loadGoods();
+});
+</script>
+</body>
+</html>

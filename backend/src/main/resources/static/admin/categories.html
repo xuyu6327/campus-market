@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>分类管理 - 管理后台</title>
+<link rel="stylesheet" href="../common.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<div class="admin-page">
+  <div class="admin-page-header">
+    <div>
+      <h1>分类管理</h1>
+      <div class="sub">维护商品分类（一级/二级）与启停状态</div>
+    </div>
+    <button class="btn btn-primary btn-sm" id="addBtn"><i class="icon" data-icon="add"></i>新增分类</button>
+  </div>
+
+  <!-- 列表 -->
+  <div class="admin-card">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>分类</th>
+          <th>父分类</th>
+          <th>排序</th>
+          <th>状态</th>
+          <th>商品数</th>
+          <th>创建时间</th>
+          <th style="min-width:130px">操作</th>
+        </tr>
+      </thead>
+      <tbody id="catBody">
+        <tr><td colspan="8"><div class="loading">加载中...</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="../api.js"></script>
+<script src="../icons.js"></script>
+<script src="common.js"></script>
+<script>
+var cats = [];
+
+function loadCats() {
+  document.getElementById('catBody').innerHTML = '<tr><td colspan="8"><div class="loading">加载中...</div></td></tr>';
+  // 接口为分页结构，管理端一次性展示全部（分类数量级很小）
+  get('/admin/category/list', { pageNum: 1, pageSize: 100 }).then(function (data) {
+    cats = toList(data);
+    if (!cats.length) {
+      document.getElementById('catBody').innerHTML = '<tr><td colspan="8"><div class="empty-wrap">暂无分类数据</div></td></tr>';
+    } else {
+      document.getElementById('catBody').innerHTML = cats.map(renderRow).join('');
+    }
+  }).catch(function () {
+    document.getElementById('catBody').innerHTML = '<tr><td colspan="8"><div class="empty-wrap">加载失败</div></td></tr>';
+  });
+}
+
+function renderRow(c) {
+  var st = c.status == 1
+    ? '<span class="tag tag-success">启用</span>'
+    : '<span class="tag tag-danger">禁用</span>';
+  var isTop = c.parentId == 0;
+  return '<tr>' +
+    '<td class="cell-sub">' + c.id + '</td>' +
+    '<td><span style="font-weight:600">' + (isTop ? '' : '　↳ ') + escapeHtml(c.name || '-') + '</span>' +
+    (c.icon ? ' <span class="cell-sub">(' + escapeHtml(c.icon) + ')</span>' : '') + '</td>' +
+    '<td class="cell-sub">' + escapeHtml(c.parentName || (isTop ? '—' : '-')) + '</td>' +
+    '<td class="cell-sub">' + (c.sortOrder === undefined || c.sortOrder === null ? '-' : c.sortOrder) + '</td>' +
+    '<td>' + st + '</td>' +
+    '<td class="cell-sub">' + (c.goodsCount || 0) + '</td>' +
+    '<td class="cell-sub">' + escapeHtml((c.createTime || '').replace('T', ' ').slice(0, 19)) + '</td>' +
+    '<td>' +
+    '<button class="op-btn" data-act="edit" data-id="' + c.id + '">编辑</button>' +
+    (c.status == 1
+      ? '<button class="op-btn danger" data-act="disable" data-id="' + c.id + '">禁用</button>'
+      : '<button class="op-btn success" data-act="enable" data-id="' + c.id + '">启用</button>') +
+    '</td>' +
+    '</tr>';
+}
+
+/* ---- 操作事件 ---- */
+document.getElementById('catBody').onclick = function (e) {
+  var btn = e.target.closest('.op-btn');
+  if (!btn) return;
+  var act = btn.getAttribute('data-act');
+  var id = parseInt(btn.getAttribute('data-id'), 10);
+  if (act === 'edit') openCatModal(id);
+  else if (act === 'disable') toggleStatus(id, 0);
+  else if (act === 'enable') toggleStatus(id, 1);
+};
+
+/* ---- 启停 ---- */
+async function toggleStatus(id, target) {
+  var text = target === 1 ? '启用' : '禁用';
+  var ok = await confirmDialog(text + '分类', '确定' + text + '该分类吗？');
+  if (!ok) return;
+  try {
+    // 后端契约：status 为 query 参数（@RequestParam），需手动拼 URL
+    await put('/admin/category/' + id + '/status?status=' + target);
+    showToast('已' + text);
+    loadCats();
+  } catch (e) {}
+}
+
+/* ---- 新增/编辑弹窗 ---- */
+function openCatModal(id) {
+  var editing = !!id;
+  var cat = editing ? (cats.find(function (c) { return c.id === id; }) || {}) : {};
+  var topCats = cats.filter(function (c) { return c.parentId == 0; });
+
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay show';
+  var parentOptions = '<option value="0">无（一级分类）</option>' +
+    topCats.map(function (c) {
+      return '<option value="' + c.id + '"' + (cat.parentId == c.id ? ' selected' : '') + '>' +
+        escapeHtml(c.name) + '</option>';
+    }).join('');
+  overlay.innerHTML =
+    '<div class="modal-content">' +
+    '<div class="modal-header"><span>' + (editing ? '编辑分类' : '新增分类') + '</span>' +
+    '<button class="modal-close" id="mClose">&times;</button></div>' +
+    '<div class="form-group"><label class="form-label">父分类</label>' +
+    '<select class="form-input" id="cParent">' + parentOptions + '</select></div>' +
+    '<div class="form-group"><label class="form-label">分类名称</label>' +
+    '<input class="form-input" id="cName" maxlength="20" placeholder="如：数码电子" value="' + escapeHtml(cat.name || '') + '"></div>' +
+    '<div class="form-group"><label class="form-label">图标标识（可选）</label>' +
+    '<input class="form-input" id="cIcon" maxlength="20" placeholder="如：book" value="' + escapeHtml(cat.icon || '') + '"></div>' +
+    '<div class="form-group"><label class="form-label">排序（数字越小越靠前）</label>' +
+    '<input class="form-input" id="cSort" type="number" value="' + (cat.sortOrder === undefined || cat.sortOrder === null ? 0 : cat.sortOrder) + '"></div>' +
+    '<div class="form-group"><label class="form-label">状态</label>' +
+    '<select class="form-input" id="cStatus">' +
+    '<option value="1"' + (cat.status === undefined || cat.status == 1 ? ' selected' : '') + '>启用</option>' +
+    '<option value="0"' + (cat.status == 0 ? ' selected' : '') + '>禁用</option>' +
+    '</select></div>' +
+    '<div class="confirm-actions">' +
+    '<button class="btn btn-ghost" id="mCancel">取消</button>' +
+    '<button class="btn btn-primary" id="mOk">保存</button>' +
+    '</div></div>';
+  document.body.appendChild(overlay);
+  function close() { overlay.remove(); }
+  overlay.querySelector('#mClose').onclick = close;
+  overlay.querySelector('#mCancel').onclick = close;
+  overlay.onclick = function (e) { if (e.target === overlay) close(); };
+  overlay.querySelector('#mOk').onclick = async function () {
+    var name = document.getElementById('cName').value.trim();
+    if (!name) { showToast('请输入分类名称'); return; }
+    var payload = {
+      parentId: parseInt(document.getElementById('cParent').value, 10),
+      name: name,
+      icon: document.getElementById('cIcon').value.trim(),
+      sortOrder: parseInt(document.getElementById('cSort').value, 10) || 0,
+      status: parseInt(document.getElementById('cStatus').value, 10)
+    };
+    var btn2 = this;
+    btn2.disabled = true;
+    try {
+      if (editing) {
+        await put('/admin/category/' + id, payload);
+        showToast('分类已更新');
+      } else {
+        await post('/admin/category', payload);
+        showToast('分类已创建');
+      }
+      close();
+      loadCats();
+    } catch (e) { btn2.disabled = false; }
+  };
+}
+
+document.getElementById('addBtn').onclick = function () { openCatModal(0); };
+
+requireAdmin().then(function (ok) {
+  if (!ok) return;
+  loadCats();
+});
+</script>
+</body>
+</html>

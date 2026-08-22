@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>我的评价 - 校园二手交易平台</title><link rel="stylesheet" href="common.css">
+<style>
+.review-page{background:var(--color-bg);min-height:100vh;padding-bottom:40px;}
+.r-tabs{display:flex;background:var(--color-surface);border-bottom:2px solid var(--color-border);position:sticky;top:0;z-index:10;}
+.r-tab{flex:1;text-align:center;padding:12px 0;font-weight:600;font-size:var(--font-size-sm);color:var(--color-text-tertiary);cursor:pointer;position:relative;}
+.r-tab.active{color:var(--color-primary);}
+.r-tab.active::after{content:'';position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);width:40px;height:3px;background:var(--color-primary);border-radius:2px;}
+.r-list{padding:var(--space-md);}
+.review-card{background:var(--color-surface);border-radius:var(--radius-md);padding:var(--space-lg);margin-bottom:var(--space-md);box-shadow:var(--shadow-sm);}
+.review-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.review-goods{font-size:var(--font-size-xs);color:var(--color-info);cursor:pointer;}
+.review-score{color:var(--color-star);font-size:15px;}
+.review-content{font-size:var(--font-size-sm);color:var(--color-text-secondary);line-height:1.6;}
+.review-time{font-size:var(--font-size-xs);color:var(--color-text-tertiary);margin-top:6px;}
+</style>
+</head>
+<body>
+<div class="review-page">
+  <div class="page-header"><span class="page-header-back" onclick="history.back()">←</span><span class="page-header-title">我的评价</span><a class="page-header-home" href="index.html"><i class="icon" data-icon="home"></i></a></div>
+  <div class="r-tabs"><div class="r-tab active" data-tab="sent">我发出的</div><div class="r-tab" data-tab="received">我收到的</div></div>
+  <div class="r-list" id="reviewList"><div class="loading">加载中...</div></div>
+</div>
+<div class="toast toast-global"></div>
+<script src="api.js"></script>
+<script src="icons.js"></script>
+<script>
+(function(){
+  if(!requireAuth())return;
+  var tab='sent';
+  document.querySelectorAll('.r-tab').forEach(function(t){
+    t.addEventListener('click',function(){
+      document.querySelectorAll('.r-tab').forEach(function(x){x.classList.remove('active');});
+      t.classList.add('active');tab=t.dataset.tab;load(true);
+    });
+  });
+  function load(reset){
+    var url=tab==='sent'?'/review/sent':'/review/received';
+    get(url,{pageNum:1,pageSize:20}).then(function(page){
+      var list=page.records||[];var el=document.getElementById('reviewList');
+      if(list.length===0){el.innerHTML='<div class="empty-state"><i class="empty-icon" data-icon="star"></i><p>暂无评价</p></div>';return;}
+      el.innerHTML=list.map(function(r){
+        var stars='';for(var i=0;i<(r.score||5);i++)stars+='★';
+        var goodsLink=r.goodsId?'<span class="review-goods" onclick="location.href=\'detail.html?id='+r.goodsId+'\'">'+(escapeHtml(r.goodsTitle)||'查看商品')+' ›</span>':'';
+        return '<div class="review-card"><div class="review-header"><span class="review-score">'+stars+'</span>'+goodsLink+'</div>'+(r.content?'<div class="review-content">'+escapeHtml(r.content)+'</div>':'')+'<div class="review-time">'+timeAgo(r.createTime)+'</div></div>';
+      }).join('');
+    }).catch(function(){});
+  }
+  load(true);
+  function escapeHtml(t){if(!t)return'';var d=document.createElement('div');d.appendChild(document.createTextNode(t));return d.innerHTML;}
+})();
+</script>
+</body>
+</html>

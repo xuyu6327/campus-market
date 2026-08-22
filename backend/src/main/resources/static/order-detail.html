@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>订单详情 - 校园二手交易平台</title><link rel="stylesheet" href="common.css">
+<style>
+.od-page{background:var(--color-bg);min-height:100vh;padding-bottom:80px;}
+.od-status{display:flex;align-items:center;gap:var(--space-md);padding:var(--space-lg);background:var(--color-surface);margin-bottom:var(--space-sm);}
+.od-status-icon{font-size:32px;}
+.od-status-info h3{font-size:var(--font-size-lg);font-weight:700;}
+.od-status-info p{font-size:var(--font-size-sm);color:var(--color-text-tertiary);margin-top:2px;}
+.od-section{padding:var(--space-lg);background:var(--color-surface);margin-bottom:var(--space-sm);}
+.od-section h4{font-size:var(--font-size-sm);font-weight:700;color:var(--color-text-secondary);margin-bottom:var(--space-md);}
+.od-goods{display:flex;gap:var(--space-md);}
+.od-goods-img{width:64px;height:64px;border-radius:var(--radius-sm);background:var(--color-surface-alt);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;overflow:hidden;}
+.od-goods-img img{width:100%;height:100%;object-fit:cover;}
+.od-goods-info{flex:1;min-width:0;}
+.od-goods-title{font-weight:600;font-size:var(--font-size-sm);}
+.od-goods-price{font-size:var(--font-size-base);font-weight:700;color:var(--color-primary);margin-top:4px;}
+.od-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--color-border);font-size:var(--font-size-sm);}
+.od-row:last-child{border-bottom:none;}
+.od-label{color:var(--color-text-tertiary);}
+.od-value{font-weight:600;}
+.od-actions{position:fixed;bottom:0;left:0;right:0;display:flex;gap:var(--space-sm);padding:var(--space-sm) var(--space-lg) calc(env(safe-area-inset-bottom)+8px);background:var(--color-surface);border-top:1px solid var(--color-border);}
+.od-actions .btn{flex:1;padding:12px;border-radius:var(--radius-md);font-weight:700;text-align:center;font-size:var(--font-size-base);}
+.frozen-tip{background:var(--color-danger-light);color:var(--color-danger);padding:12px 16px;font-size:var(--font-size-sm);font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:var(--space-sm);}
+.review-stars{display:flex;gap:8px;justify-content:center;margin-bottom:16px;}
+.review-star{font-size:32px;cursor:pointer;color:var(--color-border-strong);transition:color 0.15s;}
+.review-star.active{color:var(--color-star);}
+.review-modal textarea{width:100%;min-height:80px;padding:12px;border:1.5px solid var(--color-border);border-radius:var(--radius-md);resize:vertical;outline:none;font-size:var(--font-size-sm);}
+.review-modal textarea:focus{border-color:var(--color-primary);}
+</style>
+</head>
+<body>
+<div class="od-page">
+  <div class="page-header"><span class="page-header-back" onclick="history.back()">←</span><span class="page-header-title">订单详情</span><a class="page-header-home" href="index.html"><i class="icon" data-icon="home"></i></a></div>
+  <div id="orderContent"><div class="loading" style="padding:60px">加载中...</div></div>
+</div>
+<div class="toast toast-global"></div>
+
+<!-- 评价弹窗 -->
+<div class="modal-overlay" id="reviewModal">
+  <div class="modal-content review-modal">
+    <div class="modal-header"><span>发表评价</span><span class="modal-close" onclick="closeReviewModal()">×</span></div>
+    <div style="text-align:center;margin-bottom:12px;font-size:var(--font-size-sm);color:var(--color-text-secondary)">评分</div>
+    <div class="review-stars" id="reviewStars">
+      <span class="review-star" data-score="1">★</span>
+      <span class="review-star" data-score="2">★</span>
+      <span class="review-star" data-score="3">★</span>
+      <span class="review-star" data-score="4">★</span>
+      <span class="review-star" data-score="5">★</span>
+    </div>
+    <textarea id="reviewContent" placeholder="写下你的评价（选填）" maxlength="500"></textarea>
+    <div style="display:flex;gap:var(--space-sm);margin-top:12px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:var(--font-size-sm);cursor:pointer">
+        <input type="checkbox" id="reviewAnonymous" checked> 匿名评价
+      </label>
+    </div>
+    <button class="btn btn-primary btn-block" style="margin-top:12px" onclick="submitReview()">提交评价</button>
+  </div>
+</div>
+
+<script src="api.js"></script>
+<script src="icons.js"></script>
+<script>
+(function(){
+  if(!requireAuth())return;
+  function escapeHtml(t){if(t===null||t===undefined)return'';return String(t).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  var orderId=getQueryParam('id');
+  if(!orderId){showToast('缺少订单ID');return;}
+  loadOrder();
+  function loadOrder(){
+    get('/order/'+orderId).then(function(o){
+      render(o);
+    }).catch(function(err){document.getElementById('orderContent').innerHTML='<div class="empty-state"><p>'+err.msg+'</p></div>';});
+  }
+  function render(o){
+    var statusMap={0:'待交易',1:'已完成',2:'买家取消',3:'卖家取消',4:'超时取消'};
+    var statusIcons={0:'clock',1:'star',2:'close',3:'close',4:'clock'};
+    var status=o.status;
+    var user=getCurrentUser();
+    var isBuyer=o.isBuyer;
+    var isSeller=o.isSeller;
+    var otherName=isBuyer?o.sellerNickname:o.buyerNickname;
+    var otherRole=isBuyer?'卖家':'买家';
+    var imgHtml=o.goodsCoverImage?'<img src="'+o.goodsCoverImage+'" alt="">':'<i class="ph-icon" data-icon="box"></i>';
+    var html='<div class="od-status"><span class="od-status-icon"><i class="icon" data-icon="'+(statusIcons[status]||'doc')+'"></i></span><div class="od-status-info"><h3>'+(statusMap[status]||'未知')+'</h3><p>'+otherRole+'：'+(escapeHtml(otherName)||'未知')+'</p></div></div>';
+    if(isBuyer&&o.sellerStatus===0){html+='<div class="frozen-tip"><i class="icon" data-icon="shield"></i> 该卖家账号已被冻结，交易已暂停，请注意交易安全</div>';}
+    // 商品信息
+    html+='<div class="od-section"><div class="od-goods" onclick="location.href=\'detail.html?id='+o.goodsId+'\'"><div class="od-goods-img">'+imgHtml+'</div><div class="od-goods-info"><div class="od-goods-title">'+(escapeHtml(o.goodsTitle)||'商品')+'</div><div class="od-goods-price">¥'+Number(o.goodsPrice||0).toFixed(0)+'</div></div></div></div>';
+    // 联系信息
+    if(status===0||status===1){
+      html+='<div class="od-section"><h4><i class="icon" data-icon="message"></i> 联系方式</h4>';
+      if(isBuyer){
+        html+='<div class="od-row"><span class="od-label">卖家手机</span><span class="od-value">'+(o.sellerPhone?escapeHtml(o.sellerPhone):'-')+'</span></div>';
+        html+='<div class="od-row"><span class="od-label">卖家微信</span><span class="od-value">'+(o.sellerWechat?escapeHtml(o.sellerWechat):'-')+'</span></div>';
+        html+='<div class="od-row"><span class="od-label">卖家QQ</span><span class="od-value">'+(o.sellerQq?escapeHtml(o.sellerQq):'-')+'</span></div>';
+      }else{
+        html+='<div class="od-row"><span class="od-label">买家手机</span><span class="od-value">'+(o.buyerPhone?escapeHtml(o.buyerPhone):'未填写')+'</span></div>';
+        html+='<div class="od-row"><span class="od-label">买家微信</span><span class="od-value">'+(o.buyerWechat?escapeHtml(o.buyerWechat):'未填写')+'</span></div>';
+        html+='<div class="od-row"><span class="od-label">买家QQ</span><span class="od-value">'+(o.buyerQq?escapeHtml(o.buyerQq):'未填写')+'</span></div>';
+        if(!o.buyerPhone&&!o.buyerWechat&&!o.buyerQq){html+='<div style="font-size:var(--font-size-xs);color:var(--color-text-tertiary);padding:8px 0 0">买家未留联系方式，请等待买家主动联系您（买家可在订单中看到您的联系方式）</div>';}
+      }
+      html+='</div>';
+    }
+    // 订单信息
+    html+='<div class="od-section"><h4><i class="icon" data-icon="doc"></i> 订单信息</h4>';
+    html+='<div class="od-row"><span class="od-label">订单编号</span><span class="od-value">'+(o.orderNo||o.id)+'</span></div>';
+    html+='<div class="od-row"><span class="od-label">预订时间</span><span class="od-value">'+(o.createTime?new Date(o.createTime).toLocaleString('zh-CN'):'-')+'</span></div>';
+    if(o.tradeTime) html+='<div class="od-row"><span class="od-label">完成时间</span><span class="od-value">'+new Date(o.tradeTime).toLocaleString('zh-CN')+'</span></div>';
+    html+='</div>';
+    // 操作按钮
+    html+='<div class="od-actions">';
+    if(status===0){
+      if(isBuyer){
+        html+='<button class="btn btn-outline" onclick="cancelOrder('+o.id+',\'buyer\')">取消预订</button>';
+        html+='<button class="btn btn-primary" onclick="confirmOrder('+o.id+')">确认交易完成</button>';
+      }
+      if(isSeller){
+        html+='<button class="btn btn-outline" onclick="cancelOrder('+o.id+',\'seller\')">取消交易</button>';
+        html+='<button class="btn btn-primary" onclick="confirmOrder('+o.id+')">确认交易完成</button>';
+      }
+    }
+    if(status===0&&isBuyer&&!o.contactFailed){
+      html+='<button class="btn btn-danger" onclick="contactFail('+o.id+')">联系不上卖家</button>';
+    }
+    if(status===1){
+      if(o.rated){
+        html+='<button class="btn btn-outline" disabled style="opacity:0.6;cursor:not-allowed">订单已完成</button>';
+      }else{
+        html+='<button class="btn btn-primary" onclick="openReviewModal('+o.id+')">去评价</button>';
+      }
+    }
+    html+='</div>';
+    document.getElementById('orderContent').innerHTML=html;renderIcons();
+  }
+  function lockActions(){document.querySelectorAll('.od-actions .btn').forEach(function(b){b.disabled=true;b.style.opacity=0.6;});}
+  function unlockActions(){document.querySelectorAll('.od-actions .btn').forEach(function(b){b.disabled=false;b.style.opacity=1;});}
+  window.cancelOrder=function(id,role){
+    if(!confirm('确定取消此订单吗？'+(role==='buyer'?'（将扣除3信用分）':'')))return;
+    lockActions();
+    var url=role==='buyer'?'/order/'+id+'/buyer-cancel':'/order/'+id+'/seller-cancel';
+    put(url).then(function(){showToast('已取消');loadOrder();}).catch(function(err){showToast(err.msg);unlockActions();});
+  };
+  window.confirmOrder=function(id){
+    if(!confirm('确认交易已完成？'))return;
+    lockActions();
+    put('/order/'+id+'/confirm').then(function(){showToast('交易完成！');loadOrder();}).catch(function(err){showToast(err.msg);unlockActions();});
+  };
+  window.contactFail=function(id){
+    lockActions();
+    post('/order/'+id+'/contact-fail').then(function(){showToast('已提交，24h内卖家未响应将自动取消');loadOrder();}).catch(function(err){showToast(err.msg);unlockActions();});
+  };
+  function getQueryParam(name){var m=window.location.search.match(new RegExp('[?&]'+name+'=([^&]*)'));return m?decodeURIComponent(m[1]):null;}
+
+  // === 评价 ===
+  var reviewOrderId = null;
+  var reviewScore = 5;
+
+  window.openReviewModal = function(orderId) {
+    reviewOrderId = orderId;
+    reviewScore = 5;
+    document.querySelectorAll('.review-star').forEach(function(s) {
+      s.classList.toggle('active', parseInt(s.dataset.score) <= 5);
+    });
+    document.getElementById('reviewContent').value = '';
+    document.getElementById('reviewModal').classList.add('show');
+  };
+  window.closeReviewModal = function() {
+    document.getElementById('reviewModal').classList.remove('show');
+  };
+  document.querySelectorAll('#reviewStars .review-star').forEach(function(el) {
+    el.addEventListener('click', function() {
+      reviewScore = parseInt(this.dataset.score);
+      document.querySelectorAll('.review-star').forEach(function(s) {
+        s.classList.toggle('active', parseInt(s.dataset.score) <= reviewScore);
+      });
+    });
+  });
+  window.submitReview = function() {
+    var content = document.getElementById('reviewContent').value.trim();
+    var isAnon = document.getElementById('reviewAnonymous').checked ? 1 : 0;
+    post('/review', { orderId: reviewOrderId, score: reviewScore, content: content || undefined, isAnonymous: isAnon })
+      .then(function() {
+        showToast('评价成功');
+        closeReviewModal();
+        loadOrder();
+      })
+      .catch(function(err) { showToast(err.msg || '评价失败'); });
+  };
+})();
+</script>
+</body>
+</html>

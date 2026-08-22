@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>我的发布 - 校园二手交易平台</title><link rel="stylesheet" href="common.css">
+<style>
+.mygoods-page { background:var(--color-bg); min-height:100vh; padding-bottom:40px; }
+.status-tabs { display:flex; background:var(--color-surface); border-bottom:2px solid var(--color-border); overflow-x:auto; position:sticky; top:0; z-index:10; }
+.status-tab { flex-shrink:0; padding:12px 20px; font-weight:600; font-size:var(--font-size-sm); color:var(--color-text-tertiary); cursor:pointer; position:relative; }
+.status-tab.active { color:var(--color-primary); }
+.status-tab.active::after { content:''; position:absolute; bottom:-2px; left:50%; transform:translateX(-50%); width:30px; height:3px; background:var(--color-primary); border-radius:2px; }
+.goods-list { padding:var(--space-md); }
+.goods-card { display:flex; gap:var(--space-md); background:var(--color-surface); border-radius:var(--radius-md); margin-bottom:var(--space-md); overflow:hidden; box-shadow:var(--shadow-sm); }
+.goods-card-img { width:100px; height:100px; flex-shrink:0; background:var(--color-surface-alt); display:flex; align-items:center; justify-content:center; font-size:36px; overflow:hidden; }
+.goods-card-img img { width:100%; height:100%; object-fit:cover; }
+.goods-card-body { flex:1; padding:12px 12px 12px 0; min-width:0; }
+.goods-card-title { font-weight:600; font-size:var(--font-size-sm); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.goods-card-price { font-size:var(--font-size-base); font-weight:700; color:var(--color-primary); margin-top:4px; }
+.goods-card-meta { display:flex; align-items:center; gap:var(--space-sm); margin-top:6px; font-size:var(--font-size-xs); color:var(--color-text-tertiary); }
+.goods-card-actions { display:flex; gap:var(--space-sm); margin-top:8px; }
+</style>
+</head>
+<body>
+<div class="mygoods-page">
+  <div class="page-header"><span class="page-header-back" onclick="history.back()">←</span><span class="page-header-title">我的发布</span><a class="page-header-home" href="index.html"><i class="icon" data-icon="home"></i></a></div>
+  <div class="status-tabs" id="statusTabs">
+    <span class="status-tab active" data-status="">全部</span>
+    <span class="status-tab" data-status="1">在售</span>
+    <span class="status-tab" data-status="2">已预订</span>
+    <span class="status-tab" data-status="3">已售出</span>
+    <span class="status-tab" data-status="4">待审核</span>
+    <span class="status-tab" data-status="0">已下架</span>
+  </div>
+  <div class="goods-list" id="goodsList"><div class="loading">加载中...</div></div>
+</div>
+<div class="toast toast-global"></div>
+
+<!-- 编辑商品弹窗 -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-content">
+    <div class="modal-header"><span>编辑商品并申请上架</span><button class="modal-close" id="emClose">&times;</button></div>
+    <div class="form-group"><label class="form-label">标题</label><input class="form-input" id="emTitle" maxlength="100"></div>
+    <div class="form-group"><label class="form-label">描述</label><textarea class="form-input" id="emDesc" rows="3" maxlength="500"></textarea></div>
+    <div class="form-group"><label class="form-label">分类</label><select class="form-input" id="emCat"></select></div>
+    <div style="display:flex;gap:12px">
+      <div class="form-group" style="flex:1"><label class="form-label">价格</label><input class="form-input" id="emPrice" type="number" step="0.01" min="0.01"></div>
+      <div class="form-group" style="flex:1"><label class="form-label">原价(选填)</label><input class="form-input" id="emOriginal" type="number" step="0.01" min="0.01"></div>
+    </div>
+    <div class="form-group"><label class="form-label">成色</label><select class="form-input" id="emCond"></select></div>
+    <div class="form-group">
+      <label class="form-label">图片（可重新选择，1-9张）</label>
+      <div id="emImgs" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px"></div>
+      <input type="file" id="emFile" accept="image/*" multiple style="display:none">
+      <button class="btn btn-outline btn-sm" id="emUpload">上传图片</button>
+    </div>
+    <div class="form-group"><label class="form-label">交易地点</label><input class="form-input" id="emLoc" maxlength="200"></div>
+    <div class="form-group">
+      <label class="form-label">联系方式</label>
+      <select class="form-input" id="emContactMethod">
+        <option value="1">手机</option>
+        <option value="2">QQ</option>
+        <option value="3">微信</option>
+      </select>
+      <input class="form-input" id="emContactQq" placeholder="QQ号" style="margin-top:8px;display:none">
+      <input class="form-input" id="emContactWechat" placeholder="微信号" style="margin-top:8px;display:none">
+      <input class="form-input" id="emContactPhone" placeholder="手机号（如需修改请重新填写）" style="margin-top:8px;display:none">
+    </div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" id="emCancel">取消</button>
+      <button class="btn btn-primary" id="emSubmit">提交审核</button>
+    </div>
+  </div>
+</div>
+
+<script src="api.js"></script>
+<script src="icons.js"></script>
+<script>
+(function(){
+  if(!requireAuth())return;
+  var status='',pageNum=1,hasMore=true,loading=false;
+  document.querySelectorAll('.status-tab').forEach(function(tab){
+    tab.addEventListener('click',function(){
+      document.querySelectorAll('.status-tab').forEach(function(t){t.classList.remove('active');});
+      tab.classList.add('active');
+      status=tab.dataset.status;
+      pageNum=1;hasMore=true;loadGoods(true);
+    });
+  });
+  function loadGoods(reset){
+    if(loading||!hasMore)return;
+    loading=true;
+    if(reset)document.getElementById('goodsList').innerHTML='<div class="loading">加载中...</div>';
+    get('/goods/my',{pageNum:pageNum,pageSize:10,status:status||undefined})
+      .then(function(page){
+        loading=false;
+        var list=page.records||[];
+        if(reset)render(list);else append(list);
+        hasMore=list.length>=10;pageNum++;
+      })
+      .catch(function(){loading=false;document.getElementById('goodsList').innerHTML='<div class="empty-state"><p>加载失败</p></div>';});
+  }
+  function render(list){
+    var el=document.getElementById('goodsList');
+    if(!list||list.length===0){el.innerHTML='<div class="empty-state"><i class="empty-icon" data-icon="box"></i><p>暂无发布</p></div>';return;}
+    el.innerHTML=list.map(function(g){return card(g);}).join('');
+    bindActions();
+  }
+  function append(list){var el=document.getElementById('goodsList');list.forEach(function(g){el.innerHTML+=card(g);});bindActions();}
+  function card(g){
+    var statusMap={0:'已下架',1:'在售',2:'已预订',3:'已售出',4:'待审核'};
+    var tagMap={0:'tag-danger',1:'tag-success',2:'tag-warning',3:'tag-info',4:'tag-warning'};
+    var imgHtml=g.coverImage?'<img src="'+g.coverImage+'" alt="">':'<i class="ph-icon" data-icon="camera"></i>';
+    var actions='';
+    if(g.status===1) actions='<button class="btn btn-sm btn-outline" onclick="event.stopPropagation();takeDown('+g.id+')">下架</button>';
+    // 被管理员强制下架（status=0 且 takedownBy=1）：需修改后提交审核，不能直接上架
+    var forceDown = g.status===0 && g.takedownBy===1;
+    if(forceDown) actions='<button class="btn btn-sm btn-primary" onclick="event.stopPropagation();editGoods('+g.id+')">编辑并申请上架</button>';
+    // 待审核中：可查看，也可再次编辑（驳回后可修改重提）
+    if(g.status===4) actions='<button class="btn btn-sm btn-outline" onclick="event.stopPropagation();editGoods('+g.id+')">编辑</button>';
+    if(g.status===0 && !forceDown) actions='<button class="btn btn-sm btn-outline" onclick="event.stopPropagation();relist('+g.id+')">重新上架</button>';
+    var reasonHtml='';
+    if(forceDown) reasonHtml='<div class="goods-card-meta" style="color:var(--color-danger)">强制下架原因：'+escapeHtml(g.takedownReason||'未填写')+'</div>';
+    return '<div class="goods-card" onclick="location.href=\'detail.html?id='+g.id+'\'">'
+      +'<div class="goods-card-img">'+imgHtml+'</div>'
+      +'<div class="goods-card-body">'
+      +'<div class="goods-card-title">'+escapeHtml(g.title||'无标题')+'</div>'
+      +'<div class="goods-card-price">¥'+Number(g.price||0).toFixed(0)+' <span class="tag '+tagMap[g.status]+'">'+(statusMap[g.status]||'')+'</span></div>'
+      +'<div class="goods-card-meta">'+timeAgo(g.createTime)+' | <i class=\"icon\" data-icon="eye"></i> '+(g.viewCount||0)+'</div>'
+      +reasonHtml
+      +'<div class="goods-card-actions">'+actions+'</div>'
+      +'</div></div>';
+  }
+  window.takeDown=function(id){
+    if(!confirm('确定下架该商品吗？下架后其他用户将无法看到和预订。'))return;
+    put('/goods/'+id+'/takedown').then(function(){showToast('已下架');loadGoods(true);}).catch(function(err){showToast(err.msg);});
+  };
+  window.relist=function(id){
+    if(!confirm('确定重新上架该商品吗？'))return;
+    put('/goods/'+id+'/relist').then(function(){showToast('已上架');loadGoods(true);}).catch(function(err){showToast(err.msg);});
+  };
+
+  /* ================== 编辑商品并申请上架 ================== */
+  var editData={images:[],cats:[]};
+
+  window.editGoods=function(id){
+    editData.id=id;
+    Promise.all([
+      get('/goods/detail/'+id,null,{noAuth:true,noToast:true}),
+      get('/goods/category',null,{noAuth:true,noToast:true})
+    ]).then(function(res){
+      var g=res[0],list=res[1]||[];
+      editData.images=(g.images||[]).slice();
+      editData.cats=list;
+      // 分类下拉（一级+子级带缩进）
+      var catHtml='';
+      list.forEach(function(c){
+        if(!c.parentId){ catHtml+='<option value="'+c.id+'">'+escapeHtml(c.name)+'</option>'; }
+      });
+      list.forEach(function(c){
+        if(c.parentId){ catHtml+='<option value="'+c.id+'">　↳ '+escapeHtml(c.name)+'</option>'; }
+      });
+      document.getElementById('emCat').innerHTML=catHtml;
+      document.getElementById('emCat').value=g.categoryId;
+      document.getElementById('emTitle').value=g.title||'';
+      document.getElementById('emDesc').value=g.description||'';
+      document.getElementById('emPrice').value=g.price||'';
+      document.getElementById('emOriginal').value=g.originalPrice||'';
+      document.getElementById('emLoc').value=g.tradeLocation||'';
+      // 成色下拉
+      var condSel=document.getElementById('emCond');
+      condSel.innerHTML='';
+      [1,2,3,4,5].forEach(function(v){
+        var opt=document.createElement('option');
+        opt.value=v;
+        opt.textContent=CONDITION_MAP[v]||('成色'+v);
+        condSel.appendChild(opt);
+      });
+      condSel.value=g.goodsCondition||3;
+      // 联系方式（手机号加密不回显，QQ/微信明文回显）
+      document.getElementById('emContactMethod').value=g.contactMethod||1;
+      document.getElementById('emContactQq').value=g.contactQq||'';
+      document.getElementById('emContactWechat').value=g.contactWechat||'';
+      document.getElementById('emContactPhone').value='';
+      toggleContactInputs();
+      renderEditImgs();
+      document.getElementById('editModal').classList.add('show');
+    }).catch(function(){showToast('加载商品信息失败');});
+  };
+
+  function toggleContactInputs(){
+    var m=document.getElementById('emContactMethod').value;
+    document.getElementById('emContactQq').style.display=m==='2'?'block':'none';
+    document.getElementById('emContactWechat').style.display=m==='3'?'block':'none';
+    document.getElementById('emContactPhone').style.display=m==='1'?'block':'none';
+  }
+  document.getElementById('emContactMethod').addEventListener('change',toggleContactInputs);
+
+  function renderEditImgs(){
+    var box=document.getElementById('emImgs');
+    box.innerHTML=editData.images.map(function(src,i){
+      return '<div style="position:relative">'
+        +'<img src="'+escapeHtml(src)+'" style="width:56px;height:56px;border-radius:8px;object-fit:cover">'
+        +'<span onclick="event.stopPropagation();removeEditImg('+i+')" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--color-danger);color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;cursor:pointer">&times;</span>'
+        +'</div>';
+    }).join('');
+    if(!editData.images.length) box.innerHTML='<span style="font-size:var(--font-size-xs);color:var(--color-text-tertiary)">暂无图片，请上传</span>';
+  }
+  window.removeEditImg=function(i){editData.images.splice(i,1);renderEditImgs();};
+
+  document.getElementById('emUpload').addEventListener('click',function(){document.getElementById('emFile').click();});
+  document.getElementById('emFile').addEventListener('change',function(){
+    var files=this.files;if(!files||!files.length)return;
+    var remain=9-editData.images.length;
+    if(files.length>remain){showToast('最多9张图片，已超出'+ (files.length-remain)+'张');}
+    var list=Array.prototype.slice.call(files,0,remain);
+    if(!list.length){showToast('最多9张图片');this.value='';return;}
+    var pending=0;
+    list.forEach(function(file){
+      pending++;
+      uploadFile(file).then(function(url){
+        editData.images.push(url);
+        if(--pending===0){renderEditImgs();}
+      }).catch(function(){if(--pending===0){renderEditImgs();}});
+    });
+    this.value='';
+  });
+
+  document.getElementById('emSubmit').addEventListener('click',function(){
+    var title=document.getElementById('emTitle').value.trim();
+    var desc=document.getElementById('emDesc').value.trim();
+    var price=document.getElementById('emPrice').value;
+    var loc=document.getElementById('emLoc').value.trim();
+    var cat=document.getElementById('emCat').value;
+    var cond=parseInt(document.getElementById('emCond').value,10);
+    if(!title){showToast('请输入商品标题');return;}
+    if(!cat){showToast('请选择商品分类');return;}
+    if(!price||Number(price)<=0){showToast('请输入正确的价格');return;}
+    var payload={
+      title:title,description:desc,
+      categoryId:parseInt(cat,10),
+      price:Number(price),
+      originalPrice:document.getElementById('emOriginal').value?Number(document.getElementById('emOriginal').value):null,
+      goodsCondition:cond,
+      images:editData.images,
+      tradeLocation:loc,
+      contactMethod:parseInt(document.getElementById('emContactMethod').value,10),
+      contactQq:document.getElementById('emContactQq').value.trim(),
+      contactWechat:document.getElementById('emContactWechat').value.trim(),
+      contactPhone:document.getElementById('emContactPhone').value.trim()
+    };
+    if(!editData.images.length){showToast('至少上传1张图片');return;}
+    var method=payload.contactMethod;
+    if(method===2&&!payload.contactQq){showToast('请填写QQ号');return;}
+    if(method===3&&!payload.contactWechat){showToast('请填写微信号');return;}
+    var btn=this;btn.disabled=true;
+    put('/goods/'+editData.id,payload)
+      .then(function(){showToast('已提交审核，请等待管理员审核');closeEditModal();loadGoods(true);})
+      .catch(function(err){showToast(err.msg||'提交失败');btn.disabled=false;});
+  });
+
+  function closeEditModal(){
+    document.getElementById('editModal').classList.remove('show');
+    document.getElementById('emFile').value='';
+  }
+  document.getElementById('emClose').addEventListener('click',closeEditModal);
+  document.getElementById('emCancel').addEventListener('click',closeEditModal);
+  document.getElementById('editModal').addEventListener('click',function(e){
+    if(e.target===this)closeEditModal();
+  });
+
+  function bindActions(){}
+  window.addEventListener('scroll',function(){
+    if(loading||!hasMore)return;
+    var sh=document.documentElement.scrollHeight,st=window.scrollY||document.documentElement.scrollTop,ch=document.documentElement.clientHeight;
+    if(sh-st-ch<200)loadGoods();
+  });
+  loadGoods(true);
+  function escapeHtml(t){if(!t)return'';var d=document.createElement('div');d.appendChild(document.createTextNode(t));return d.innerHTML;}
+})();
+</script>
+</body>
+</html>

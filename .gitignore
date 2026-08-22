@@ -1,0 +1,42 @@
+# ===== Java / Maven =====
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+*.pid
+.mvn/wrapper/maven-wrapper.jar
+
+# ===== IDE =====
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+
+# ===== 运行时数据 =====
+backend/uploads/
+uploads/
+*.tmp
+*.bak
+
+# ===== 系统文件 =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== 本地临时文件 =====
+test_*.sh
+q_*.sql
+fix_*.sql
+lsdir.js
+cp.txt
+add_home_btn.bat
+check_home.js
+fix_notif.js
+fix_notif_profile.js
+
+# ===== 内部文件（不对外发布）=====

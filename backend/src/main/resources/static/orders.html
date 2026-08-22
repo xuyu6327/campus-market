@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>我的订单 - 校园二手交易平台</title><link rel="stylesheet" href="common.css">
+<style>
+.order-page { background:var(--color-bg); min-height:100vh; padding-bottom:40px; }
+.order-tabs { display:flex; background:var(--color-surface); border-bottom:2px solid var(--color-border); position:sticky; top:0; z-index:10; }
+.order-tab { flex:1; text-align:center; padding:12px 0; font-weight:600; font-size:var(--font-size-sm); color:var(--color-text-tertiary); cursor:pointer; position:relative; }
+.order-tab.active { color:var(--color-primary); }
+.order-tab.active::after { content:''; position:absolute; bottom:-2px; left:50%; transform:translateX(-50%); width:40px; height:3px; background:var(--color-primary); border-radius:2px; }
+.order-list { padding:var(--space-md); }
+.order-card { background:var(--color-surface); border-radius:var(--radius-md); margin-bottom:var(--space-md); overflow:hidden; box-shadow:var(--shadow-sm); cursor:pointer; }
+.order-card-top { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--color-border); font-size:var(--font-size-xs); color:var(--color-text-tertiary); }
+.order-card-status { font-weight:600; }
+.order-card-body { display:flex; gap:var(--space-md); padding:12px 16px; }
+.order-card-img { width:72px; height:72px; border-radius:var(--radius-sm); background:var(--color-surface-alt); display:flex; align-items:center; justify-content:center; font-size:28px; flex-shrink:0; overflow:hidden; }
+.order-card-img img { width:100%; height:100%; object-fit:cover; }
+.order-card-info { flex:1; min-width:0; }
+.order-card-title { font-weight:600; font-size:var(--font-size-sm); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.order-card-price { font-size:var(--font-size-base); font-weight:700; color:var(--color-primary); margin-top:4px; }
+.order-card-other { font-size:var(--font-size-xs); color:var(--color-text-tertiary); margin-top:2px; }
+.order-search { display:flex; gap:8px; padding:10px 12px; background:var(--color-surface); border-bottom:1px solid var(--color-border); }
+.order-search input { flex:1; padding:8px 12px; border:1.5px solid var(--color-border); border-radius:var(--radius-md); outline:none; font-size:var(--font-size-sm); }
+.order-search input:focus { border-color:var(--color-primary); }
+.order-search .search-btn { padding:8px 18px; border-radius:var(--radius-md); background:var(--color-primary); color:#fff; font-size:var(--font-size-sm); font-weight:600; cursor:pointer; white-space:nowrap; }
+.order-filter { display:flex; gap:8px; padding:10px 12px; background:var(--color-surface); border-bottom:1px solid var(--color-border); overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.order-filter::-webkit-scrollbar { display:none; }
+.filter-item { flex-shrink:0; padding:6px 14px; border-radius:999px; border:1.5px solid var(--color-border); font-size:var(--font-size-xs); color:var(--color-text-tertiary); cursor:pointer; }
+.filter-item.active { border-color:var(--color-primary); background:var(--color-primary-light); color:var(--color-primary); font-weight:600; }
+</style>
+</head>
+<body>
+<div class="order-page">
+  <div class="page-header"><span class="page-header-back" onclick="history.back()">←</span><span class="page-header-title">我的订单</span><a class="page-header-home" href="index.html"><i class="icon" data-icon="home"></i></a></div>
+  <div class="order-tabs"><div class="order-tab active" data-tab="buy">我买到的</div><div class="order-tab" data-tab="sell">我卖出的</div></div>
+  <div class="order-search"><input type="text" id="searchInput" placeholder="搜索商品名称"><span class="search-btn" id="searchBtn">搜索</span></div>
+  <div class="order-filter" id="orderFilter">
+    <div class="filter-item active" data-status="">全部</div>
+    <div class="filter-item" data-status="0">待交易</div>
+    <div class="filter-item" data-status="1">已完成</div>
+    <div class="filter-item" data-status="2">买家取消</div>
+    <div class="filter-item" data-status="3">卖家取消</div>
+    <div class="filter-item" data-status="4">超时取消</div>
+  </div>
+  <div class="order-list" id="orderList"><div class="loading">加载中...</div></div>
+</div>
+<div class="toast toast-global"></div>
+<script src="api.js"></script>
+<script src="icons.js"></script>
+<script>
+(function() {
+  if(!requireAuth())return;
+  function escapeHtml(t){if(t===null||t===undefined)return'';return String(t).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  var currentTab='buy';
+  var currentStatus=''; // '' = 全部
+  var keyword='';       // 商品名搜索关键词
+  var pageNum=1,hasMore=true,loading=false;
+  document.querySelectorAll('.order-tab').forEach(function(tab){
+    tab.addEventListener('click',function(){
+      document.querySelectorAll('.order-tab').forEach(function(t){t.classList.remove('active');});
+      tab.classList.add('active');
+      currentTab=tab.dataset.tab;
+      resetList();
+    });
+  });
+  // 状态筛选
+  document.querySelectorAll('#orderFilter .filter-item').forEach(function(item){
+    item.addEventListener('click',function(){
+      document.querySelectorAll('#orderFilter .filter-item').forEach(function(i){i.classList.remove('active');});
+      item.classList.add('active');
+      currentStatus=item.dataset.status;
+      resetList();
+    });
+  });
+  // 商品名搜索
+  function doSearch(){
+    var kw=document.getElementById('searchInput').value.trim();
+    if(kw===keyword)return;
+    keyword=kw;
+    resetList();
+  }
+  document.getElementById('searchBtn').addEventListener('click',doSearch);
+  document.getElementById('searchInput').addEventListener('keydown',function(e){if(e.key==='Enter')doSearch();});
+  function resetList(){pageNum=1;hasMore=true;loadOrders(true);}
+  function loadOrders(reset){
+    if(loading||!hasMore)return;
+    loading=true;
+    if(reset){pageNum=1;hasMore=true;document.getElementById('orderList').innerHTML='<div class="loading">加载中...</div>';}
+    var url=currentTab==='buy'?'/order/buy':'/order/sell';
+    var params={pageNum:pageNum,pageSize:10};
+    if(currentStatus!=='')params.status=parseInt(currentStatus);
+    if(keyword)params.keyword=keyword;
+    get(url,params)
+      .then(function(page){
+        loading=false;
+        var list=page.records||[];
+        if(reset)renderOrders(list);
+        else appendOrders(list);
+        hasMore=list.length>=10;
+        pageNum++;
+      })
+      .catch(function(){loading=false;document.getElementById('orderList').innerHTML='<div class="empty-state"><p>加载失败</p></div>';});
+  }
+  function renderOrders(list){
+    var el=document.getElementById('orderList');
+    if(!list||list.length===0){el.innerHTML='<div class="empty-state"><i class="empty-icon" data-icon="doc"></i><p>暂无订单</p></div>';return;}
+    el.innerHTML=list.map(function(o){return orderCard(o);}).join('');
+    bindClicks();
+  }
+  function appendOrders(list){
+    var el=document.getElementById('orderList');
+    list.forEach(function(o){el.innerHTML+=orderCard(o);});
+    bindClicks();
+  }
+  function orderCard(o){
+    var statusColor={0:'tag-warning',1:'tag-success',2:'tag-danger',3:'tag-danger',4:'tag-info'}[o.status]||'tag-info';
+    var statusMap={0:'待交易',1:'已完成',2:'买家取消',3:'卖家取消',4:'超时取消'};
+    var imgHtml=o.goodsCoverImage?'<img src="'+o.goodsCoverImage+'" alt="">':'<i class="ph-icon" data-icon="box"></i>';
+    var other=currentTab==='buy'?'卖家：'+(escapeHtml(o.sellerNickname)||'未知'):'买家：'+(escapeHtml(o.buyerNickname)||'未知');
+    return '<div class="order-card" data-id="'+o.id+'"><div class="order-card-top"><span>订单号：'+(o.orderNo||o.id)+'</span><span class="order-card-status tag '+statusColor+'">'+(statusMap[o.status]||'未知')+'</span></div><div class="order-card-body"><div class="order-card-img">'+imgHtml+'</div><div class="order-card-info"><div class="order-card-title">'+(escapeHtml(o.goodsTitle)||'商品')+'</div><div class="order-card-price">¥'+Number(o.goodsPrice||0).toFixed(0)+'</div><div class="order-card-other">'+other+' | '+timeAgo(o.createTime)+'</div></div></div></div>';
+  }
+  function bindClicks(){
+    document.querySelectorAll('.order-card').forEach(function(card){
+      card.addEventListener('click',function(){window.location.href='order-detail.html?id='+this.dataset.id;});
+    });
+  }
+  // Scroll load
+  window.addEventListener('scroll',function(){
+    if(loading||!hasMore)return;
+    var sh=document.documentElement.scrollHeight,st=window.scrollY||document.documentElement.scrollTop,ch=document.documentElement.clientHeight;
+    if(sh-st-ch<200)loadOrders();
+  });
+  loadOrders(true);
+})();
+</script>
+</body>
+</html>

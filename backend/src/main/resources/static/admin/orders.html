@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>订单管理 - 管理后台</title>
+<link rel="stylesheet" href="../common.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<div class="admin-page">
+  <div class="admin-page-header">
+    <div>
+      <h1>订单管理</h1>
+      <div class="sub">查看订单信息（含买家解密联系方式）与交易状态</div>
+    </div>
+  </div>
+
+  <!-- 筛选 -->
+  <div class="filter-bar">
+    <input class="form-input filter-input" id="keywordInput" placeholder="订单号 / 商品 / 买家 / 卖家">
+    <select class="filter-select" id="statusSelect">
+      <option value="">全部状态</option>
+      <option value="0">待交易</option>
+      <option value="1">已完成</option>
+      <option value="2">买家取消</option>
+      <option value="3">卖家取消</option>
+      <option value="4">超时取消</option>
+    </select>
+    <button class="btn btn-primary btn-sm" id="searchBtn"><i class="icon" data-icon="search"></i>搜索</button>
+    <button class="btn btn-ghost btn-sm" id="resetBtn">重置</button>
+  </div>
+
+  <!-- 列表 -->
+  <div class="admin-card">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>订单号</th>
+          <th>商品</th>
+          <th>买家</th>
+          <th>卖家</th>
+          <th>金额</th>
+          <th>状态</th>
+          <th>创建时间</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="orderBody">
+        <tr><td colspan="8"><div class="loading">加载中...</div></td></tr>
+      </tbody>
+    </table>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</div>
+
+<script src="../api.js"></script>
+<script src="../icons.js"></script>
+<script src="common.js"></script>
+<script>
+var ORDER_STATUS = {
+  0: { text: '待交易', cls: 'tag-warning' },
+  1: { text: '已完成', cls: 'tag-success' },
+  2: { text: '买家取消', cls: 'tag-secondary' },
+  3: { text: '卖家取消', cls: 'tag-secondary' },
+  4: { text: '超时取消', cls: 'tag-danger' }
+};
+
+var pageNum = 1, pageSize = 10;
+var keyword = '', status = '';
+
+function loadOrders() {
+  document.getElementById('orderBody').innerHTML = '<tr><td colspan="8"><div class="loading">加载中...</div></td></tr>';
+  var params = { pageNum: pageNum, pageSize: pageSize };
+  if (keyword) params.keyword = keyword;
+  if (status !== '') params.status = parseInt(status, 10);
+  get('/admin/order/list', params).then(function (page) {
+    page = page || {};
+    var list = page.records || [];
+    if (!list.length) {
+      document.getElementById('orderBody').innerHTML = '<tr><td colspan="8"><div class="empty-wrap">暂无订单数据</div></td></tr>';
+    } else {
+      document.getElementById('orderBody').innerHTML = list.map(renderRow).join('');
+    }
+    renderPagination('pagination', page, function (p) { pageNum = p; loadOrders(); });
+  }).catch(function () {
+    document.getElementById('orderBody').innerHTML = '<tr><td colspan="8"><div class="empty-wrap">加载失败</div></td></tr>';
+  });
+}
+
+function renderRow(o) {
+  var st = ORDER_STATUS[o.status] || ORDER_STATUS[0];
+  var thumb = o.goodsImage
+    ? '<span class="thumb"><img src="' + escapeHtml(o.goodsImage) + '" alt=""></span>'
+    : '<span class="thumb"><i class="icon" data-icon="box"></i></span>';
+  return '<tr>' +
+    '<td class="cell-sub">' + escapeHtml(o.orderNo || '-') + '</td>' +
+    '<td><div style="display:flex;align-items:center;gap:10px">' + thumb +
+    '<div class="cell-title">' + escapeHtml(o.goodsTitle || '-') + '</div></div></td>' +
+    '<td>' + escapeHtml(o.buyerNickname || 'ID:' + (o.buyerId || '-')) + '</td>' +
+    '<td>' + escapeHtml(o.sellerNickname || 'ID:' + (o.sellerId || '-')) + '</td>' +
+    '<td style="color:var(--color-primary);font-weight:700">' + formatPrice(o.goodsPrice) + '</td>' +
+    '<td><span class="tag ' + st.cls + '">' + st.text + '</span></td>' +
+    '<td class="cell-sub">' + escapeHtml((o.createTime || '').replace('T', ' ').slice(0, 19)) + '</td>' +
+    '<td><button class="op-btn" data-act="detail" data-id="' + o.id + '">详情</button></td>' +
+    '</tr>';
+}
+
+/* ---- 操作事件 ---- */
+document.getElementById('orderBody').onclick = function (e) {
+  var btn = e.target.closest('.op-btn');
+  if (!btn) return;
+  showDetail(parseInt(btn.getAttribute('data-id'), 10));
+};
+
+/* ---- 详情 ---- */
+function showDetail(id) {
+  get('/admin/order/' + id).then(function (o) {
+    o = o || {};
+    var st = ORDER_STATUS[o.status] || ORDER_STATUS[0];
+    var thumb = o.goodsImage
+      ? '<img class="thumb" style="width:64px;height:64px" src="' + escapeHtml(o.goodsImage) + '" alt="">'
+      : '<span class="thumb" style="width:64px;height:64px"><i class="icon" data-icon="box"></i></span>';
+    var html =
+      '<div class="detail-grid">' +
+      '<div class="detail-item full"><div class="k">订单号</div><div class="v">' + escapeHtml(o.orderNo || '-') + '</div></div>' +
+      '<div class="detail-item full"><div class="k">商品</div><div class="v">' +
+      '<div style="display:flex;align-items:center;gap:10px;margin-top:4px">' + thumb +
+      '<span>' + escapeHtml(o.goodsTitle || '-') + '</span></div></div></div>' +
+      '<div class="detail-item"><div class="k">买家</div><div class="v">' + escapeHtml(o.buyerNickname || 'ID:' + (o.buyerId || '-')) + '</div></div>' +
+      '<div class="detail-item"><div class="k">卖家</div><div class="v">' + escapeHtml(o.sellerNickname || 'ID:' + (o.sellerId || '-')) + '</div></div>' +
+      '<div class="detail-item"><div class="k">买家手机（解密）</div><div class="v">' + escapeHtml(o.buyerPhone || '-') + '</div></div>' +
+      '<div class="detail-item"><div class="k">卖家 QQ / 微信</div><div class="v">' + escapeHtml(o.sellerQq || '-') + ' / ' + escapeHtml(o.sellerWechat || '-') + '</div></div>' +
+      '<div class="detail-item"><div class="k">金额</div><div class="v" style="color:var(--color-primary)">' + formatPrice(o.goodsPrice) + '</div></div>' +
+      '<div class="detail-item"><div class="k">状态</div><div class="v"><span class="tag ' + st.cls + '">' + st.text + '</span></div></div>' +
+      '<div class="detail-item"><div class="k">交易完成时间</div><div class="v">' + escapeHtml((o.tradeTime || '-').replace('T', ' ').slice(0, 19)) + '</div></div>' +
+      '<div class="detail-item"><div class="k">联系不上标记</div><div class="v">' + escapeHtml((o.contactFailAt || '-').replace('T', ' ').slice(0, 19)) + '</div></div>' +
+      '<div class="detail-item"><div class="k">创建时间</div><div class="v">' + escapeHtml((o.createTime || '-').replace('T', ' ').slice(0, 19)) + '</div></div>' +
+      '<div class="detail-item"><div class="k">最后更新</div><div class="v">' + escapeHtml((o.updateTime || '-').replace('T', ' ').slice(0, 19)) + '</div></div>' +
+      '</div>';
+    alertDialog('订单详情 #' + (o.id || ''), html);
+  }).catch(function () {});
+}
+
+/* ---- 筛选事件 ---- */
+function doSearch() {
+  keyword = document.getElementById('keywordInput').value.trim();
+  status = document.getElementById('statusSelect').value;
+  pageNum = 1;
+  loadOrders();
+}
+document.getElementById('searchBtn').onclick = doSearch;
+document.getElementById('keywordInput').onkeydown = function (e) { if (e.key === 'Enter') doSearch(); };
+document.getElementById('resetBtn').onclick = function () {
+  document.getElementById('keywordInput').value = '';
+  document.getElementById('statusSelect').value = '';
+  doSearch();
+};
+
+requireAdmin().then(function (ok) {
+  if (!ok) return;
+  loadOrders();
+});
+</script>
+</body>
+</html>
