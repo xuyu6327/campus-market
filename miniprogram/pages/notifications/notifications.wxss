@@ -1,0 +1,129 @@
+/* 消息 */
+.notif-page { padding-bottom: 40rpx; }
+.notif-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 32rpx;
+  background: #fff;
+  border-bottom: 2rpx solid var(--color-border);
+}
+.notif-title { font-size: 32rpx; font-weight: 700; }
+.read-all { font-size: 24rpx; color: var(--color-primary); font-weight: 600; }
+
+.notif-tabs { display: flex; background: #fff; border-bottom: 2rpx solid var(--color-border); }
+.notif-tab {
+  flex: 1;
+  text-align: center;
+  padding: 20rpx 0;
+  font-weight: 600;
+  font-size: 28rpx;
+  color: var(--color-text-tertiary);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10rpx;
+}
+.notif-tab.active { color: var(--color-primary); }
+.notif-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60rpx;
+  height: 6rpx;
+  background: var(--color-primary);
+  border-radius: 6rpx;
+}
+.tab-badge {
+  min-width: 32rpx;
+  height: 32rpx;
+  padding: 0 10rpx;
+  border-radius: 999rpx;
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 20rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+/* 通知 */
+.notif-list { padding: 20rpx 24rpx; }
+.notif-item {
+  display: flex;
+  gap: 20rpx;
+  padding: 24rpx 28rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(26, 26, 46, 0.04);
+}
+.notif-item.unread { background: var(--color-primary-light); }
+.notif-icon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: var(--color-surface-alt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  flex-shrink: 0;
+}
+.notif-body { min-width: 0; }
+.notif-title { font-size: 28rpx; font-weight: 600; }
+.notif-title.unread { color: var(--color-primary); }
+.notif-content { font-size: 24rpx; color: var(--color-text-secondary); margin-top: 4rpx; }
+.notif-time { font-size: 22rpx; color: var(--color-text-tertiary); margin-top: 8rpx; }
+
+/* 私信会话 */
+.conv-list { padding: 20rpx 24rpx; }
+.conv-item {
+  display: flex;
+  gap: 20rpx;
+  padding: 22rpx 24rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(26, 26, 46, 0.04);
+}
+.conv-avatar {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 32rpx;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.conv-avatar image { width: 100%; height: 100%; }
+.conv-top { display: flex; align-items: center; justify-content: space-between; }
+.conv-name { font-weight: 600; font-size: 28rpx; }
+.conv-time { font-size: 22rpx; color: var(--color-text-tertiary); flex-shrink: 0; margin-left: 16rpx; }
+.conv-preview { display: flex; align-items: center; justify-content: space-between; margin-top: 6rpx; }
+.conv-preview-text { font-size: 24rpx; color: var(--color-text-secondary); max-width: 400rpx; }
+.conv-badge {
+  min-width: 36rpx;
+  height: 36rpx;
+  padding: 0 10rpx;
+  border-radius: 999rpx;
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 20rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}

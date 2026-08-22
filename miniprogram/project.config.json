@@ -1,0 +1,29 @@
+{
+  "description": "校园二手交易平台微信小程序（复用后端全部接口）",
+  "compileType": "miniprogram",
+  "libVersion": "3.17.1",
+  "appid": "wx8c0053d5a8313456",
+  "projectname": "campus-market-miniprogram",
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    },
+    "condition": false
+  },
+  "condition": {},
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "editorSetting": {
+    "tabIndent": "insertSpaces",
+    "tabSize": 2
+  }
+}

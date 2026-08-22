@@ -1,0 +1,24 @@
+<!-- 信用分变更记录 -->
+<view class="page credit-page">
+  <view class="credit-summary">
+    <text class="score">{{currentScore !== null && currentScore !== undefined ? currentScore : '-'}}</text>
+    <text class="label">当前信用分</text>
+  </view>
+
+  <view class="log-list">
+    <view class="log-card" wx:for="{{logs}}" wx:key="id">
+      <view class="log-top">
+        <text class="log-change {{item.changeValue >= 0 ? 'plus' : 'minus'}}">{{item.changeValue >= 0 ? '+' : ''}}{{item.changeValue}}</text>
+        <text class="log-score">{{item.beforeScore}} → {{item.afterScore}}</text>
+      </view>
+      <view class="log-reason">{{item.reason || '-'}}</view>
+      <view class="log-time">{{item.timeText}}</view>
+    </view>
+  </view>
+
+  <view wx:if="{{!loading && logs.length === 0}}" class="empty-state">
+    <view class="empty-icon">📈</view>
+    <text>暂无信用分变更记录</text>
+  </view>
+  <view class="load-more" wx:if="{{logs.length > 0}}">{{loadMoreText}}</view>
+</view>

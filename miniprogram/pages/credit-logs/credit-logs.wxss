@@ -1,0 +1,29 @@
+/* 信用分记录 */
+.credit-page { padding-bottom: 40rpx; }
+
+.credit-summary {
+  margin: 24rpx 32rpx;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
+  border-radius: 20rpx;
+  padding: 40rpx 0;
+  text-align: center;
+  color: #fff;
+}
+.credit-summary .score { font-size: 64rpx; font-weight: 800; display: block; }
+.credit-summary .label { font-size: 24rpx; opacity: 0.9; }
+
+.log-list { padding: 0 24rpx 20rpx; }
+.log-card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx 28rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(26, 26, 46, 0.04);
+}
+.log-top { display: flex; align-items: center; justify-content: space-between; }
+.log-change { font-size: 36rpx; font-weight: 800; }
+.log-change.plus { color: var(--color-success); }
+.log-change.minus { color: var(--color-danger); }
+.log-score { font-size: 24rpx; color: var(--color-text-secondary); }
+.log-reason { font-size: 26rpx; margin-top: 10rpx; }
+.log-time { font-size: 22rpx; color: var(--color-text-tertiary); margin-top: 8rpx; }

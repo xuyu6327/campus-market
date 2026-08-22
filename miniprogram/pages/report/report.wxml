@@ -1,0 +1,27 @@
+<!-- 提交举报（用户或商品） -->
+<view class="page report-page">
+  <view class="report-target">举报对象：{{targetLabel}}</view>
+
+  <view class="form-section">
+    <view class="form-section-title"><text class="required">*</text> 举报理由</view>
+    <view class="report-types">
+      <view
+        class="report-type {{reasonIndex === index ? 'active' : ''}}"
+        wx:for="{{reasons}}"
+        wx:key="*this"
+        data-index="{{index}}"
+        bindtap="onReasonTap"
+      >{{item}}</view>
+    </view>
+  </view>
+
+  <view class="form-section">
+    <view class="form-section-title">详细描述</view>
+    <textarea class="form-textarea" placeholder="请描述具体情况..." maxlength="1000" value="{{description}}" bindinput="onDescription" />
+    <view class="form-hint">{{description.length}}/1000</view>
+  </view>
+
+  <view class="submit-bar">
+    <button class="btn btn-primary btn-block" bindtap="submit" loading="{{submitting}}">提交举报</button>
+  </view>
+</view>

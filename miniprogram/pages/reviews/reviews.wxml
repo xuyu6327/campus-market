@@ -1,0 +1,25 @@
+<!-- 我的评价：发出的 / 收到的 -->
+<view class="page reviews-page">
+  <view class="review-tabs">
+    <view class="review-tab {{mode === 'sent' ? 'active' : ''}}" data-mode="sent" bindtap="onModeTap">我发出的</view>
+    <view class="review-tab {{mode === 'received' ? 'active' : ''}}" data-mode="received" bindtap="onModeTap">我收到的</view>
+  </view>
+
+  <view class="review-list">
+    <view class="review-card" wx:for="{{reviews}}" wx:key="id">
+      <view class="review-top">
+        <text class="review-goods text-ellipsis">{{item.goodsTitle || '商品'}}</text>
+        <text class="review-stars">{{item.starText}}</text>
+      </view>
+      <view class="review-peer">{{item.peerLabel}}：{{item.peerName}}</view>
+      <view class="review-content" wx:if="{{item.content}}">{{item.content}}</view>
+      <view class="review-time">{{item.timeText}}</view>
+    </view>
+  </view>
+
+  <view wx:if="{{!loading && reviews.length === 0}}" class="empty-state">
+    <view class="empty-icon">⭐</view>
+    <text>暂无评价</text>
+  </view>
+  <view class="load-more" wx:if="{{reviews.length > 0}}">{{loadMoreText}}</view>
+</view>

@@ -1,0 +1,43 @@
+/* 我的评价 */
+.reviews-page { padding-bottom: 40rpx; }
+.review-tabs {
+  display: flex;
+  background: #fff;
+  border-bottom: 2rpx solid var(--color-border);
+}
+.review-tab {
+  flex: 1;
+  text-align: center;
+  padding: 22rpx 0;
+  font-weight: 600;
+  font-size: 28rpx;
+  color: var(--color-text-tertiary);
+  position: relative;
+}
+.review-tab.active { color: var(--color-primary); }
+.review-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60rpx;
+  height: 6rpx;
+  background: var(--color-primary);
+  border-radius: 6rpx;
+}
+
+.review-list { padding: 20rpx 24rpx; }
+.review-card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx 28rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 8rpx rgba(26, 26, 46, 0.04);
+}
+.review-top { display: flex; align-items: center; justify-content: space-between; gap: 20rpx; }
+.review-goods { font-size: 28rpx; font-weight: 600; }
+.review-stars { color: var(--color-star); font-size: 26rpx; flex-shrink: 0; }
+.review-peer { font-size: 22rpx; color: var(--color-text-tertiary); margin-top: 8rpx; }
+.review-content { font-size: 26rpx; color: var(--color-text-secondary); line-height: 1.6; margin-top: 8rpx; }
+.review-time { font-size: 22rpx; color: var(--color-text-tertiary); margin-top: 12rpx; }

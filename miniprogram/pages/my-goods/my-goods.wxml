@@ -1,0 +1,49 @@
+<!-- 我的发布：状态筛选 / 下架 / 重新上架 / 编辑并申请上架 -->
+<view class="page mygoods-page">
+  <!-- 状态 Tabs -->
+  <scroll-view class="status-tabs" scroll-x enable-flex>
+    <view
+      class="status-tab {{activeStatus === '' ? 'active' : ''}}"
+      data-status=""
+      bindtap="onStatusTap"
+    >全部</view>
+    <view
+      class="status-tab {{activeStatus === item.value ? 'active' : ''}}"
+      wx:for="{{statusTabs}}"
+      wx:key="value"
+      data-status="{{item.value}}"
+      bindtap="onStatusTap"
+    >{{item.label}}</view>
+  </scroll-view>
+
+  <!-- 商品列表 -->
+  <view class="goods-list">
+    <view class="goods-card" wx:for="{{goodsList}}" wx:key="id" data-id="{{item.id}}" bindtap="goDetail">
+      <view class="goods-card-img">
+        <image wx:if="{{item.coverImage}}" src="{{item.coverImage}}" mode="aspectFill" />
+        <view wx:else class="img-ph">📷</view>
+      </view>
+      <view class="goods-card-body flex-1">
+        <view class="goods-card-title text-ellipsis">{{item.title}}</view>
+        <view class="goods-card-price">
+          ¥{{item.priceText}}
+          <text class="tag {{item.statusTagClass}}">{{item.statusName}}</text>
+        </view>
+        <view class="goods-card-meta">{{item.timeAgo}} · {{item.viewCount}}次浏览</view>
+        <view class="takedown-reason" wx:if="{{item.forceDown}}">强制下架原因：{{item.takedownReason || '未填写'}}</view>
+        <view class="goods-card-actions">
+          <view wx:if="{{item.status === 1}}" class="btn btn-sm btn-outline" data-id="{{item.id}}" catchtap="takeDown">下架</view>
+          <view wx:if="{{item.forceDown}}" class="btn btn-sm btn-primary" data-id="{{item.id}}" catchtap="editGoods">编辑并申请上架</view>
+          <view wx:if="{{item.status === 4}}" class="btn btn-sm btn-outline" data-id="{{item.id}}" catchtap="editGoods">编辑</view>
+          <view wx:if="{{item.status === 0 && !item.forceDown}}" class="btn btn-sm btn-outline" data-id="{{item.id}}" catchtap="relist">重新上架</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{!loading && goodsList.length === 0}}" class="empty-state">
+    <view class="empty-icon">📦</view>
+    <text>暂无发布</text>
+  </view>
+  <view class="load-more" wx:if="{{goodsList.length > 0}}">{{loadMoreText}}</view>
+</view>

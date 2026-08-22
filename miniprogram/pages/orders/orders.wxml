@@ -1,0 +1,53 @@
+<!-- 我的订单：买到的/卖出的 + 状态筛选 + 搜索 -->
+<view class="page orders-page">
+  <!-- 买卖 Tabs -->
+  <view class="order-tabs">
+    <view class="order-tab {{tab === 'buy' ? 'active' : ''}}" data-tab="buy" bindtap="onTabTap">我买到的</view>
+    <view class="order-tab {{tab === 'sell' ? 'active' : ''}}" data-tab="sell" bindtap="onTabTap">我卖出的</view>
+  </view>
+
+  <!-- 搜索 -->
+  <view class="order-search">
+    <input class="search-input" placeholder="搜索商品名称" value="{{keyword}}" bindinput="onKeywordInput" confirm-type="search" bindconfirm="doSearch" />
+    <view class="search-btn" bindtap="doSearch">搜索</view>
+  </view>
+
+  <!-- 状态筛选 -->
+  <scroll-view class="order-filter" scroll-x enable-flex>
+    <view class="filter-item {{activeStatus === '' ? 'active' : ''}}" data-status="" bindtap="onStatusTap">全部</view>
+    <view
+      class="filter-item {{activeStatus === item.value ? 'active' : ''}}"
+      wx:for="{{statusOptions}}"
+      wx:key="value"
+      data-status="{{item.value}}"
+      bindtap="onStatusTap"
+    >{{item.label}}</view>
+  </scroll-view>
+
+  <!-- 订单列表 -->
+  <view class="order-list">
+    <view class="order-card" wx:for="{{orders}}" wx:key="id" data-id="{{item.id}}" bindtap="goDetail">
+      <view class="order-card-top">
+        <text>订单号：{{item.orderNo || item.id}}</text>
+        <text class="tag {{item.statusClass}}">{{item.statusName}}</text>
+      </view>
+      <view class="order-card-body">
+        <view class="order-card-img">
+          <image wx:if="{{item.goodsCoverImage}}" src="{{item.goodsCoverImage}}" mode="aspectFill" />
+          <view wx:else class="img-ph">📦</view>
+        </view>
+        <view class="order-card-info flex-1">
+          <view class="order-card-title text-ellipsis">{{item.goodsTitle || '商品'}}</view>
+          <view class="order-card-price">¥{{item.priceText}}</view>
+          <view class="order-card-other">{{item.otherLabel}}：{{item.otherName}} · {{item.timeAgo}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{!loading && orders.length === 0}}" class="empty-state">
+    <view class="empty-icon">📋</view>
+    <text>暂无订单</text>
+  </view>
+  <view class="load-more" wx:if="{{orders.length > 0}}">{{loadMoreText}}</view>
+</view>

@@ -1,0 +1,95 @@
+<!-- 订单详情：状态 / 商品 / 联系方式 / 操作（评价/取消/确认/联系不上） -->
+<view class="page od-page" wx:if="{{order}}">
+
+  <!-- 状态 -->
+  <view class="od-status">
+    <view class="od-status-icon">{{statusIcon}}</view>
+    <view class="od-status-info">
+      <view class="od-status-title">{{order.statusName}}</view>
+      <view class="od-status-peer">{{peerRole}}：{{peerName}}</view>
+    </view>
+  </view>
+
+  <view class="frozen-tip" wx:if="{{order.isBuyer && order.sellerStatus === 0}}">该卖家账号已被冻结，交易已暂停，请注意交易安全</view>
+
+  <!-- 商品信息 -->
+  <view class="od-section goods-section" data-id="{{order.goodsId}}" bindtap="goGoods">
+    <view class="od-goods-img">
+      <image wx:if="{{goodsCoverImage}}" src="{{goodsCoverImage}}" mode="aspectFill" />
+      <view wx:else class="img-ph">📦</view>
+    </view>
+    <view class="od-goods-info flex-1">
+      <view class="od-goods-title text-ellipsis">{{order.goodsTitle || '商品'}}</view>
+      <view class="od-goods-price">¥{{priceText}}</view>
+    </view>
+  </view>
+
+  <!-- 联系方式（待交易/已完成时展示，仅交易双方可见） -->
+  <view class="od-section" wx:if="{{order.status === 0 || order.status === 1}}">
+    <view class="od-section-title">联系方式</view>
+    <block wx:if="{{order.isBuyer}}">
+      <view class="od-row"><text class="od-label">卖家手机</text><text class="od-value">{{order.sellerPhone || '-'}}</text></view>
+      <view class="od-row"><text class="od-label">卖家微信</text><text class="od-value">{{order.sellerWechat || '-'}}</text></view>
+      <view class="od-row"><text class="od-label">卖家QQ</text><text class="od-value">{{order.sellerQq || '-'}}</text></view>
+    </block>
+    <block wx:else>
+      <view class="od-row"><text class="od-label">买家手机</text><text class="od-value">{{order.buyerPhone || '未填写'}}</text></view>
+      <view class="od-row"><text class="od-label">买家微信</text><text class="od-value">{{order.buyerWechat || '未填写'}}</text></view>
+      <view class="od-row"><text class="od-label">买家QQ</text><text class="od-value">{{order.buyerQq || '未填写'}}</text></view>
+      <view class="od-hint" wx:if="{{!order.buyerPhone && !order.buyerWechat && !order.buyerQq}}">买家未留联系方式，请等待买家主动联系您（买家可在订单中看到您的联系方式）</view>
+    </block>
+  </view>
+
+  <!-- 订单信息 -->
+  <view class="od-section">
+    <view class="od-section-title">订单信息</view>
+    <view class="od-row"><text class="od-label">订单编号</text><text class="od-value">{{order.orderNo || order.id}}</text></view>
+    <view class="od-row"><text class="od-label">预订时间</text><text class="od-value">{{createTimeText}}</text></view>
+    <view class="od-row" wx:if="{{order.tradeTime}}"><text class="od-label">完成时间</text><text class="od-value">{{tradeTimeText}}</text></view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="bottom-bar" wx:if="{{showActions}}">
+    <block wx:if="{{order.status === 0}}">
+      <view wx:if="{{order.isBuyer}}" class="btn btn-outline action-btn" bindtap="cancelOrder" data-role="buyer">取消预订</view>
+      <view wx:if="{{order.isSeller}}" class="btn btn-outline action-btn" bindtap="cancelOrder" data-role="seller">取消交易</view>
+      <view class="btn btn-primary action-btn" bindtap="confirmOrder">确认交易完成</view>
+    </block>
+    <view wx:if="{{order.status === 0 && order.isBuyer && !order.contactFailed}}" class="btn btn-danger action-btn" bindtap="contactFail">联系不上卖家</view>
+    <block wx:if="{{order.status === 1}}">
+      <view wx:if="{{order.rated}}" class="btn btn-ghost action-btn rated-btn">订单已完成</view>
+      <view wx:else class="btn btn-primary action-btn" bindtap="openReviewModal">去评价</view>
+    </block>
+  </view>
+
+  <!-- 评价弹窗 -->
+  <view class="modal-mask" wx:if="{{showReview}}" bindtap="closeReview">
+    <view class="modal-sheet center" catchtap="noop">
+      <view class="modal-header">
+        <text>发表评价</text>
+        <text class="modal-close" bindtap="closeReview">×</text>
+      </view>
+      <view class="review-tip">评分</view>
+      <view class="review-stars">
+        <text
+          class="review-star {{index < reviewScore ? 'active' : ''}}"
+          wx:for="{{[1,2,3,4,5]}}"
+          wx:key="*this"
+          data-score="{{item}}"
+          bindtap="onStarTap"
+        >★</text>
+      </view>
+      <textarea class="form-textarea" placeholder="写下你的评价（选填）" maxlength="500" value="{{reviewContent}}" bindinput="onReviewContent" />
+      <view class="review-anon" bindtap="toggleAnon">
+        <text class="anon-box {{reviewAnonymous ? 'checked' : ''}}">✓</text>
+        <text>匿名评价</text>
+      </view>
+      <button class="btn btn-primary btn-block" bindtap="submitReview" loading="{{submittingReview}}">提交评价</button>
+    </view>
+  </view>
+</view>
+
+<view wx:else class="empty-state">
+  <view class="empty-icon">📋</view>
+  <text>{{loadError || '加载中...'}}</text>
+</view>
