@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>消息通知 - 校园二手交易平台</title><link rel="stylesheet" href="common.css">
+<style>
+.notif-page{background:var(--color-bg);min-height:100vh;padding-bottom:40px;}
+.notif-header{display:flex;align-items:center;justify-content:space-between;padding:var(--space-md) var(--space-lg);background:var(--color-surface);border-bottom:1px solid var(--color-border);position:sticky;top:0;z-index:10;}
+.notif-header h3{font-size:var(--font-size-lg);font-weight:700;}
+.notif-header .read-all{font-size:var(--font-size-xs);color:var(--color-primary);cursor:pointer;font-weight:600;}.notif-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#EF4444;color:#fff;font-size:10px;font-weight:700;margin-left:6px;vertical-align:middle;}
+.notif-list{padding:var(--space-md);}
+.notif-item{display:flex;gap:var(--space-md);padding:14px 16px;background:var(--color-surface);border-radius:var(--radius-md);margin-bottom:var(--space-sm);box-shadow:var(--shadow-sm);cursor:pointer;transition:background 0.15s;}
+.notif-item.unread{background:var(--color-primary-light);}
+.notif-icon{font-size:22px;flex-shrink:0;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--color-surface-alt);}
+.notif-body{flex:1;min-width:0;}
+.notif-title{font-size:var(--font-size-sm);font-weight:600;}
+.notif-title.unread{color:var(--color-primary);}
+.notif-content{font-size:var(--font-size-xs);color:var(--color-text-secondary);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.notif-time{font-size:var(--font-size-xs);color:var(--color-text-tertiary);margin-top:4px;}
+.notif-tabs{display:flex;background:var(--color-surface);border-bottom:1px solid var(--color-border);}
+.notif-tab{flex:1;text-align:center;padding:12px 0;font-weight:600;font-size:var(--font-size-sm);color:var(--color-text-tertiary);cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;gap:6px;}
+.tab-badge{min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:#EF4444;color:#fff;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;}
+.notif-tab.active{color:var(--color-primary);}
+.notif-tab.active::after{content:'';position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);width:40px;height:3px;background:var(--color-primary);border-radius:2px;}
+.conv-list{padding:var(--space-md);}
+.conv-item{display:flex;gap:var(--space-md);padding:13px 12px;background:var(--color-surface);border-radius:var(--radius-md);margin-bottom:var(--space-sm);cursor:pointer;box-shadow:var(--shadow-sm);}
+.conv-item:active{background:var(--color-surface-alt);}
+.conv-avatar{width:46px;height:46px;border-radius:50%;background:var(--color-primary-light);color:var(--color-primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;flex-shrink:0;overflow:hidden;}
+.conv-avatar img{width:100%;height:100%;object-fit:cover;}
+.conv-main{flex:1;min-width:0;}
+.conv-top{display:flex;align-items:center;justify-content:space-between;}
+.conv-name{font-weight:600;font-size:var(--font-size-sm);color:var(--color-text-primary);}
+.conv-time{font-size:var(--font-size-xs);color:var(--color-text-tertiary);flex-shrink:0;}
+.conv-preview{display:flex;align-items:center;justify-content:space-between;margin-top:4px;}
+.conv-preview-text{font-size:var(--font-size-xs);color:var(--color-text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px;}
+.conv-badge{min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#EF4444;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-sizing:border-box;}
+.conv-badge.hidden{display:none;}
+</style>
+</head>
+<body>
+<div class="notif-page">
+  <div class="notif-header">
+    <div style="display:flex;align-items:center;gap:var(--space-md)"><span class="page-header-back" onclick="history.back()" style="font-size:20px;cursor:pointer">←</span><a class="page-header-home" href="index.html"><i class="icon" data-icon="home"></i></a><h3>消息<span class="notif-badge" id="unreadBadge" style="display:none">0</span></h3></div>
+    <span class="read-all" id="readAllBtn">全部已读</span>
+  </div>
+  <div class="notif-tabs"><span class="notif-tab active" data-tab="notice">通知<span class="tab-badge" id="noticeBadge" style="display:none">0</span></span><span class="notif-tab" data-tab="chat">私信<span class="tab-badge" id="chatBadge" style="display:none">0</span></span></div>
+  <div class="notif-list" id="notifList"><div class="loading">加载中...</div></div>
+  <div class="conv-list" id="convList" style="display:none"></div>
+</div>
+<div class="toast toast-global"></div>
+<script src="api.js"></script>
+<script src="icons.js"></script>
+<script>
+(function(){
+  if(!requireAuth())return;
+  var pageNum=1,hasMore=true,loading=false;
+  var currentTab='notice';
+  var convPageNum=1,convHasMore=true,convLoading=false;
+  loadNotifications(true);loadUnreadBadge();
+  // ===== 通知/私信 tab 切换 =====
+  document.querySelectorAll('.notif-tab').forEach(function(tab){
+    tab.addEventListener('click',function(){
+      document.querySelectorAll('.notif-tab').forEach(function(t){t.classList.remove('active');});
+      tab.classList.add('active');
+      currentTab=tab.dataset.tab;
+      document.getElementById('readAllBtn').style.display=currentTab==='notice'?'':'none';
+      if(currentTab==='chat'){
+        document.getElementById('notifList').style.display='none';
+        document.getElementById('convList').style.display='block';
+        loadConvs(true);
+      }else{
+        document.getElementById('convList').style.display='none';
+        document.getElementById('notifList').style.display='block';
+      }
+    });
+  });
+  // ===== 私信会话列表 =====
+  function loadConvs(reset){
+    if(convLoading||!convHasMore)return;
+    convLoading=true;
+    if(reset)document.getElementById('convList').innerHTML='<div class="loading">加载中...</div>';
+    get('/chat/conversations',{pageNum:convPageNum,pageSize:10},{noToast:true}).then(function(page){
+      convLoading=false;
+      var list=page.records||[];
+      var el=document.getElementById('convList');
+      if(reset){
+        if(list.length===0){el.innerHTML='<div class="empty-state"><i class="empty-icon" data-icon="chat"></i><p>暂无会话</p><p style="font-size:12px;color:var(--color-text-tertiary)">在商品详情页点击「私聊卖家」发起聊天</p></div>';return;}
+        el.innerHTML=list.map(function(c){return convItem(c);}).join('');
+      }else{list.forEach(function(c){el.innerHTML+=convItem(c);});}
+      bindConvClicks();
+      convHasMore=list.length>=10;convPageNum++;
+    }).catch(function(err){convLoading=false;document.getElementById('convList').innerHTML='<div class="empty-state"><p>加载失败，请确认已重启后端后重试</p></div>';});
+  }
+  function convItem(c){
+    var avatar=c.otherAvatar?'<img src="'+c.otherAvatar+'" alt="">':escapeHtml((c.otherNickname||'?').charAt(0));
+    var time=c.lastTime?formatConvTime(c.lastTime):'';
+    var badge=c.unreadCount>0?'<span class="conv-badge">'+c.unreadCount+'</span>':'<span class="conv-badge hidden"></span>';
+    return '<div class="conv-item" data-id="'+c.id+'"><div class="conv-avatar">'+avatar+'</div><div class="conv-main"><div class="conv-top"><span class="conv-name">'+escapeHtml(c.otherNickname||'未知用户')+'</span><span class="conv-time">'+time+'</span></div><div class="conv-preview"><span class="conv-preview-text">'+(c.lastMessage?escapeHtml(c.lastMessage):'开始聊天吧')+'</span>'+badge+'</div></div></div>';
+  }
+  function bindConvClicks(){
+    document.querySelectorAll('.conv-item').forEach(function(el){
+      el.addEventListener('click',function(){window.location.href='chat-detail.html?id='+this.dataset.id;});
+    });
+  }
+  function formatConvTime(t){
+    var d=new Date(t),now=new Date();
+    if(d.toDateString()===now.toDateString())return d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
+    var yest=new Date(now);yest.setDate(now.getDate()-1);
+    if(d.toDateString()===yest.toDateString())return '昨天';
+    return (d.getMonth()+1)+'月'+d.getDate()+'日';
+  }
+  function loadNotifications(reset){
+    if(loading||!hasMore)return;
+    loading=true;
+    if(reset)document.getElementById('notifList').innerHTML='<div class="loading">加载中...</div>';
+    get('/notification/list',{pageNum:pageNum,pageSize:20}).then(function(page){
+      loading=false;
+      var list=page.records||[];
+      var el=document.getElementById('notifList');
+      if(reset){
+        if(list.length===0){el.innerHTML='<div class="empty-state"><i class="empty-icon" data-icon="bell"></i><p>暂无通知</p></div>';return;}
+        el.innerHTML=list.map(function(n){return notifItem(n);}).join('');renderIcons();
+      }else{list.forEach(function(n){el.innerHTML+=notifItem(n);});}
+      hasMore=list.length>=20;pageNum++;
+      bindClicks();
+    }).catch(function(){loading=false;});
+  }
+  // 未读角标：顶部总数 + 通知/私信 tab 各自数量
+  function loadUnreadBadge(){
+    var total=0,left=2;
+    function badge(id,n){var b=document.getElementById(id);if(n>0){b.textContent=n;b.style.display='inline-flex';}else{b.style.display='none';}}
+    function done(){badge('unreadBadge',total);}
+    get('/notification/unread-count',{},{noToast:true}).then(function(n){var v=n||0;total+=v;badge('noticeBadge',v);if(--left===0)done();}).catch(function(){if(--left===0)done();});
+    get('/chat/unread-count',{},{noToast:true}).then(function(n){var v=n||0;total+=v;badge('chatBadge',v);if(--left===0)done();}).catch(function(){if(--left===0)done();});
+  }
+  function notifItem(n){
+    var icons={1:'message',2:'clock',3:'clock',4:'phone',5:'star',6:'bell',7:'flag',8:'shield',9:'clock'};
+    var icon=icons[n.type]||'bell';
+    var unreadCls=n.isRead===0?'unread':'';
+    return '<div class="notif-item '+unreadCls+'" data-id="'+n.id+'" data-read="'+(n.isRead||0)+'" data-type="'+(n.type||0)+'" data-related="'+(n.relatedId||'')+'">'
+      +'<div class="notif-icon"><i class="icon" data-icon="'+icon+'"></i></div>'
+      +'<div class="notif-body">'
+      +'<div class="notif-title '+(n.isRead===0?'unread':'')+'">'+escapeHtml(n.title||'')+'</div>'
+      +(n.content?'<div class="notif-content">'+escapeHtml(n.content)+'</div>':'')
+      +'<div class="notif-time">'+timeAgo(n.createTime)+'</div>'
+      +'</div>'
+
+      +'</div>';
+  }
+  function bindClicks(){
+    document.querySelectorAll('.notif-item').forEach(function(el){
+      el.addEventListener('click',function(){
+        var id=this.dataset.id;
+        var read=parseInt(this.dataset.read);
+        var type=parseInt(this.dataset.type||0);
+        var related=this.dataset.related;
+        // 标记已读
+        if(read===0){
+          put('/notification/'+id+'/read').then(function(){loadUnreadBadge();
+            el.classList.remove('unread');
+            el.querySelector('.notif-title').classList.remove('unread');
+
+            el.dataset.read=1;
+          }).catch(function(){});
+        }
+        // 点击跳转：1-6 订单相关 → 订单详情；7 系统通知 → 商品详情
+        if(related){
+          if(type===7){
+            window.location.href='detail.html?id='+related;
+          }else{
+            window.location.href='order-detail.html?id='+related;
+          }
+        }
+      });
+    });
+  }
+  // 全部已读
+  document.getElementById('readAllBtn').addEventListener('click',function(){
+    put('/notification/read-all').then(function(){loadUnreadBadge();
+      document.querySelectorAll('.notif-item').forEach(function(el){
+        el.classList.remove('unread');
+        el.querySelector('.notif-title')&&el.querySelector('.notif-title').classList.remove('unread');
+        
+        el.dataset.read=1;
+      });
+      showToast('已全部标记已读');
+    }).catch(function(err){showToast(err.msg);});
+  });
+  // 从聊天页返回时（bfcache 恢复）刷新未读角标
+  window.addEventListener('pageshow',function(e){if(e.persisted)loadUnreadBadge();});
+  // 滚动加载（按当前 tab 分流）
+  window.addEventListener('scroll',function(){
+    var sh=document.documentElement.scrollHeight,st=window.scrollY||document.documentElement.scrollTop,ch=document.documentElement.clientHeight;
+    if(sh-st-ch<200){
+      if(currentTab==='chat'){loadConvs();}else if(loading||!hasMore){return;}else{loadNotifications();}
+    }
+  });
+  function escapeHtml(t){if(!t)return'';var d=document.createElement('div');d.appendChild(document.createTextNode(t));return d.innerHTML;}
+})();
+</script>
+</body>
+</html>

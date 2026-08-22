@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>私信 - 校园二手交易平台</title><link rel="stylesheet" href="common.css">
+<style>
+.conv-page{background:var(--color-bg);min-height:100vh;padding-bottom:40px;}
+.conv-list{padding:var(--space-md);}
+.conv-item{display:flex;gap:var(--space-md);padding:13px 12px;background:var(--color-surface);border-radius:var(--radius-md);margin-bottom:var(--space-sm);cursor:pointer;box-shadow:var(--shadow-sm);}
+.conv-item:active{background:var(--color-surface-alt);}
+.conv-avatar{width:46px;height:46px;border-radius:50%;background:var(--color-primary-light);color:var(--color-primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;flex-shrink:0;overflow:hidden;}
+.conv-avatar img{width:100%;height:100%;object-fit:cover;}
+.conv-main{flex:1;min-width:0;}
+.conv-top{display:flex;align-items:center;justify-content:space-between;}
+.conv-name{font-weight:600;font-size:var(--font-size-sm);color:var(--color-text-primary);}
+.conv-time{font-size:var(--font-size-xs);color:var(--color-text-tertiary);flex-shrink:0;}
+.conv-preview{display:flex;align-items:center;justify-content:space-between;margin-top:4px;}
+.conv-preview-text{font-size:var(--font-size-xs);color:var(--color-text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px;}
+.conv-badge{min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#EF4444;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-sizing:border-box;}
+.conv-badge.hidden{display:none;}
+</style>
+</head>
+<body>
+<div class="conv-page">
+  <div class="page-header"><span class="page-header-back" onclick="history.back()">←</span><span class="page-header-title">私信</span><a class="page-header-home" href="index.html"><i class="icon" data-icon="home"></i></a></div>
+  <div class="conv-list" id="convList"><div class="loading">加载中...</div></div>
+</div>
+<div class="toast toast-global"></div>
+<script src="api.js"></script>
+<script src="icons.js"></script>
+<script>
+(function(){
+  if(!requireAuth())return;
+  var pageNum=1,hasMore=true,loading=false;
+  function escapeHtml(t){if(t===null||t===undefined)return'';return String(t).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  load();
+  function load(reset){
+    if(loading||!hasMore)return;
+    loading=true;
+    if(reset)document.getElementById('convList').innerHTML='<div class="loading">加载中...</div>';
+    get('/chat/conversations',{pageNum:pageNum,pageSize:10},{noToast:true}).then(function(page){
+      loading=false;
+      var list=page.records||[];
+      if(reset&&list.length===0){document.getElementById('convList').innerHTML='<div class="empty-state"><i class="empty-icon" data-icon="chat"></i><p>暂无会话</p><p style="font-size:12px;color:var(--color-text-tertiary)">在商品详情页点击「私聊卖家」发起聊天</p></div>';return;}
+      list.forEach(function(c){document.getElementById('convList').innerHTML+=convItem(c);});
+      bindClicks();
+      hasMore=list.length>=10;pageNum++;
+    }).catch(function(err){loading=false;document.getElementById('convList').innerHTML='<div class="empty-state"><p>加载失败，请确认已重启后端后重试</p></div>';});
+  }
+  function convItem(c){
+    var avatar=c.otherAvatar?'<img src="'+c.otherAvatar+'" alt="">':(escapeHtml((c.otherNickname||'?').charAt(0)));
+    var time=c.lastTime?formatTime(c.lastTime):'';
+    var badge=c.unreadCount>0?'<span class="conv-badge">'+c.unreadCount+'</span>':'<span class="conv-badge hidden"></span>';
+    return '<div class="conv-item" data-id="'+c.id+'"><div class="conv-avatar">'+avatar+'</div><div class="conv-main"><div class="conv-top"><span class="conv-name">'+escapeHtml(c.otherNickname||'未知用户')+'</span><span class="conv-time">'+time+'</span></div><div class="conv-preview"><span class="conv-preview-text">'+(c.lastMessage?escapeHtml(c.lastMessage):'开始聊天吧')+'</span>'+badge+'</div></div></div>';
+  }
+  function bindClicks(){
+    document.querySelectorAll('.conv-item').forEach(function(el){
+      el.addEventListener('click',function(){window.location.href='chat-detail.html?id='+this.dataset.id;});
+    });
+  }
+  function formatTime(t){
+    var d=new Date(t),now=new Date();
+    var sameDay=d.toDateString()===now.toDateString();
+    if(sameDay){return d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');}
+    var yest=new Date(now);yest.setDate(now.getDate()-1);
+    if(d.toDateString()===yest.toDateString())return '昨天';
+    return (d.getMonth()+1)+'月'+d.getDate()+'日';
+  }
+  window.addEventListener('scroll',function(){
+    if(loading||!hasMore)return;
+    var sh=document.documentElement.scrollHeight,st=window.scrollY||document.documentElement.scrollTop,ch=document.documentElement.clientHeight;
+    if(sh-st-ch<200)load();
+  });
+})();
+</script>
+</body>
+</html>

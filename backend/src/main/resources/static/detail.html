@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>商品详情 - 校园二手交易平台</title><link rel="stylesheet" href="common.css">
+<style>
+.detail-header{display:flex;align-items:center;gap:var(--space-md);padding:var(--space-sm) var(--space-lg);background:var(--color-surface);position:sticky;top:0;z-index:100;border-bottom:1px solid var(--color-border);}
+.detail-header .back{font-size:20px;padding:4px;cursor:pointer;color:var(--color-text-primary);}
+.detail-header .title{flex:1;font-weight:700;font-size:var(--font-size-base);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.detail-header .action{font-size:13px;padding:6px 12px;color:var(--color-text-tertiary);cursor:pointer;}
+.carousel{position:relative;width:100%;max-width:640px;margin:0 auto;background:var(--color-surface-alt);overflow:hidden;border-radius:var(--radius-md);}
+.carousel-track{display:flex;transition:transform 0.3s ease;}
+.carousel-slide{min-width:100%;aspect-ratio:4/3;max-height:70vh;display:flex;align-items:center;justify-content:center;}
+.carousel-slide img{width:100%;height:100%;object-fit:cover;}
+.carousel-slide .placeholder{width:72px;height:72px;opacity:0.2;color:var(--color-text-tertiary);}
+.carousel-indicators{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px;}
+.carousel-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.5);transition:all 0.2s;}
+.carousel-dot.active{background:#fff;width:18px;border-radius:3px;}
+.carousel-count{position:absolute;bottom:12px;right:12px;background:rgba(0,0,0,0.5);color:#fff;font-size:12px;padding:3px 10px;border-radius:var(--radius-full);font-weight:600;}
+.detail-section{padding:var(--space-lg);background:var(--color-surface);margin-bottom:var(--space-sm);}
+.detail-price-row{display:flex;align-items:baseline;gap:var(--space-sm);margin-bottom:var(--space-sm);}
+.detail-price{font-size:var(--font-size-2xl);font-weight:800;color:var(--color-primary);}
+.detail-price .currency{font-size:var(--font-size-base);}
+.detail-original{font-size:var(--font-size-sm);color:var(--color-text-tertiary);text-decoration:line-through;}
+.detail-condition{display:inline-block;font-size:11px;font-weight:600;color:var(--color-secondary);background:var(--color-secondary-light);padding:3px 10px;border-radius:var(--radius-full);margin-left:auto;}
+.detail-title{font-size:var(--font-size-lg);font-weight:700;line-height:1.4;}
+.detail-meta{display:flex;flex-wrap:wrap;gap:var(--space-md);margin-top:var(--space-md);font-size:var(--font-size-sm);color:var(--color-text-tertiary);}
+.detail-meta span{display:flex;align-items:center;gap:4px;}
+.detail-desc{padding:var(--space-lg);background:var(--color-surface);margin-bottom:var(--space-sm);}
+.detail-desc h4{font-size:var(--font-size-sm);font-weight:700;color:var(--color-text-secondary);margin-bottom:var(--space-sm);}
+.detail-desc p{font-size:var(--font-size-sm);color:var(--color-text-primary);line-height:1.7;white-space:pre-wrap;}
+.seller-section{padding:var(--space-lg);background:var(--color-surface);margin-bottom:var(--space-sm);display:flex;align-items:center;gap:var(--space-md);cursor:pointer;}
+.seller-avatar{width:48px;height:48px;border-radius:50%;background:var(--color-primary-light);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--color-primary);flex-shrink:0;overflow:hidden;}
+.seller-avatar img{width:100%;height:100%;object-fit:cover;}
+.seller-info{flex:1;min-width:0;}
+.seller-name{font-weight:700;font-size:var(--font-size-base);}
+.seller-stats{font-size:var(--font-size-xs);color:var(--color-text-tertiary);margin-top:2px;}
+.review-section{padding:var(--space-lg);background:var(--color-surface);margin-bottom:var(--space-sm);}
+.review-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-md);}
+.review-header h4{font-size:var(--font-size-sm);font-weight:700;color:var(--color-text-secondary);}
+.review-header a{font-size:var(--font-size-xs);color:var(--color-text-tertiary);}
+.review-item{padding:var(--space-md) 0;border-bottom:1px solid var(--color-border);}
+.review-item:last-child{border-bottom:none;}
+.review-user{display:flex;align-items:center;gap:var(--space-sm);margin-bottom:4px;}
+.review-user .name{font-size:var(--font-size-sm);font-weight:600;}
+.review-user .stars{color:var(--color-star);font-size:13px;}
+.review-content{font-size:var(--font-size-sm);color:var(--color-text-secondary);line-height:1.6;}
+.review-time{font-size:var(--font-size-xs);color:var(--color-text-tertiary);margin-top:4px;}
+.detail-bottom{position:fixed;bottom:0;left:0;right:0;display:flex;align-items:center;gap:var(--space-sm);padding:var(--space-sm) var(--space-lg) calc(env(safe-area-inset-bottom)+8px);background:var(--color-surface);border-top:1px solid var(--color-border);z-index:100;}
+.detail-bottom .btn-fav{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 16px;font-size:10px;color:var(--color-text-tertiary);cursor:pointer;}
+.detail-bottom .btn-fav .heart{transition:transform 0.2s;color:var(--color-text-tertiary);}
+.heart svg path{fill:none;}
+.detail-bottom .btn-fav .heart.liked{color:var(--color-danger);transform:scale(1.1);}
+.detail-bottom .btn-fav .heart.liked svg path{fill:currentColor;}
+.detail-bottom .btn-book{flex:1;padding:12px;border-radius:var(--radius-md);font-weight:700;font-size:var(--font-size-base);text-align:center;cursor:pointer;transition:opacity 0.2s;}
+.detail-bottom .btn-book.primary{background:var(--color-primary);color:#fff;}
+.detail-bottom .btn-book.disabled{background:var(--color-border);color:var(--color-text-tertiary);cursor:not-allowed;}
+.detail-bottom .btn-book.owner{background:var(--color-info);color:#fff;}
+.detail-bottom .btn-book.offline{background:var(--color-text-tertiary);color:#fff;cursor:not-allowed;}
+.detail-bottom .btn-chat{display:flex;align-items:center;justify-content:center;gap:4px;padding:12px 14px;border-radius:var(--radius-md);border:1.5px solid var(--color-primary);color:var(--color-primary);font-weight:700;font-size:var(--font-size-sm);cursor:pointer;white-space:nowrap;}
+.seller-frozen-bar{background:var(--color-danger-light);color:var(--color-danger);padding:10px 16px;font-size:var(--font-size-sm);font-weight:600;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;}
+.contact-modal{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.contact-modal.show{display:flex;}
+.contact-sheet{width:100%;max-width:500px;background:var(--color-surface);border-radius:var(--radius-lg)var(--radius-lg)0 0;padding:var(--space-xl)var(--space-lg)calc(env(safe-area-inset-bottom)+20px);animation:slideUp 0.25s ease;}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.contact-sheet h3{text-align:center;font-size:var(--font-size-lg);margin-bottom:var(--space-lg);}
+.contact-row{display:flex;align-items:center;justify-content:space-between;padding:var(--space-md) 0;border-bottom:1px solid var(--color-border);}
+.contact-label{font-size:var(--font-size-sm);color:var(--color-text-secondary);}
+.contact-value{font-size:var(--font-size-base);font-weight:600;}
+.contact-copy{font-size:var(--font-size-xs);color:var(--color-primary);font-weight:600;cursor:pointer;padding:4px 10px;border-radius:var(--radius-sm);background:var(--color-primary-light);}
+.contact-close{margin-top:var(--space-lg);width:100%;padding:12px;border-radius:var(--radius-md);background:var(--color-surface-alt);font-weight:600;color:var(--color-text-secondary);cursor:pointer;}
+.report-modal{}
+.report-form textarea{width:100%;min-height:80px;padding:12px;border:1.5px solid var(--color-border);border-radius:var(--radius-md);resize:vertical;outline:none;font-size:var(--font-size-sm);}
+.report-form textarea:focus{border-color:var(--color-primary);}
+.report-type-select{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-sm);margin-bottom:var(--space-lg);}
+.report-type-item{padding:10px;text-align:center;border:1.5px solid var(--color-border);border-radius:var(--radius-md);font-size:var(--font-size-sm);cursor:pointer;transition:all 0.2s;}
+.report-type-item.active{border-color:var(--color-primary);background:var(--color-primary-light);color:var(--color-primary);font-weight:600;}
+.book-goods{display:flex;align-items:center;justify-content:space-between;padding:var(--space-md);background:var(--color-surface-alt);border-radius:var(--radius-md);margin-bottom:var(--space-md);}
+.book-goods .t{font-size:var(--font-size-sm);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;margin-right:var(--space-md);}
+.book-goods .p{font-size:var(--font-size-base);font-weight:700;color:var(--color-primary);flex-shrink:0;}
+.book-input{width:100%;padding:12px;border:1.5px solid var(--color-border);border-radius:var(--radius-md);margin-bottom:var(--space-sm);outline:none;font-size:var(--font-size-sm);box-sizing:border-box;}
+.book-input:focus{border-color:var(--color-primary);}
+.book-tip{font-size:var(--font-size-xs);color:var(--color-text-tertiary);line-height:1.6;margin-bottom:var(--space-md);}
+.carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;z-index:5;}
+.carousel-arrow.left{left:10px;}
+.carousel-arrow.right{right:10px;}
+.carousel-arrow:hover{background:rgba(0,0,0,0.55);}
+.carousel-arrow svg{width:18px;height:18px;}
+.detail-page{padding-bottom:80px;}
+</style>
+</head>
+<body>
+<div class="detail-page">
+  <div class="detail-header"><span class="back" onclick="history.back()">←</span><span class="title" id="headerTitle">商品详情</span><a class="page-header-home" href="index.html"><i class="icon" data-icon="home"></i></a><span class="action" id="reportBtn">举报</span></div>
+  <div class="carousel" id="carousel"><div class="carousel-track" id="carouselTrack"><div class="carousel-slide"><i class="icon placeholder" data-icon="camera"></i></div></div><span class="carousel-arrow left" id="carouselPrev" style="display:none" onclick="carouselPrev()"><i class="icon" data-icon="chevron-left"></i></span><span class="carousel-arrow right" id="carouselNext" style="display:none" onclick="carouselNext()"><i class="icon" data-icon="chevron-right"></i></span><div class="carousel-indicators" id="carouselDots"></div><div class="carousel-count" id="carouselCount">1/1</div></div>
+  <div class="seller-frozen-bar" id="sellerFrozenBar" style="display:none"><i class="icon" data-icon="shield"></i> 该卖家账号已被冻结，请注意交易安全，建议暂停交易</div>
+  <div class="detail-section"><div class="detail-price-row"><div class="detail-price"><span class="currency">¥</span><span id="goodsPrice">0</span></div><span class="detail-original" id="goodsOriginal" style="display:none"></span><span class="detail-condition" id="goodsCondition"></span></div><div class="detail-title" id="goodsTitle">加载中...</div><div class="detail-meta"><span><i class="icon" data-icon="doc"></i><span id="goodsCategory">-</span></span><span><i class="icon" data-icon="map-pin"></i><span id="goodsLocation">-</span></span><span><i class="icon" data-icon="eye"></i><span id="goodsViews">0</span>次浏览</span><span><i class="icon" data-icon="clock"></i><span id="goodsTime">-</span></span></div></div>
+  <div class="detail-desc"><h4>商品描述</h4><p id="goodsDesc">暂无描述</p></div>
+  <div class="seller-section" id="sellerSection"><div class="seller-avatar" id="sellerAvatar">?</div><div class="seller-info"><div class="seller-name" id="sellerName">-</div><div class="seller-stats" id="sellerStats">信用分: -</div></div><span class="seller-arrow">›</span></div>
+  <div class="review-section"><div class="review-header"><h4>卖家评价 <span id="reviewRate" style="font-size:12px;color:var(--color-star);font-weight:600"></span></h4></div><div id="reviewsContainer"><div class="empty-state" style="padding:16px 0"><p style="font-size:var(--font-size-sm)">暂无评价</p></div></div></div>
+</div>
+<div class="detail-bottom"><div class="btn-fav" id="favBtn"><span class="heart" id="favHeart"><i class="icon" data-icon="heart"></i></span><span class="count" id="favCount">0</span></div><div class="btn-chat" id="chatBtn"><i class="icon" data-icon="chat"></i>私聊</div><div class="btn-book" id="bookBtn">加载中...</div></div>
+<div class="modal-overlay" id="reportModal"><div class="modal-content report-modal"><div class="modal-header"><span>举报商品</span><span class="modal-close" onclick="closeReport()">×</span></div><div class="report-type-select" id="reportTypes"><div class="report-type-item" data-type="1">虚假商品</div><div class="report-type-item" data-type="2">描述不符</div><div class="report-type-item" data-type="3">违禁品</div><div class="report-type-item" data-type="4">广告骚扰</div><div class="report-type-item" data-type="5">联系方式违规</div><div class="report-type-item" data-type="6">其他违规</div></div><textarea class="report-form" id="reportDesc" placeholder="请描述具体情况..." rows="3"></textarea><button class="btn btn-primary btn-block" id="reportSubmitBtn" style="margin-top:12px" onclick="submitReport()">提交举报</button></div></div>
+<div class="modal-overlay" id="bookModal"><div class="modal-content"><div class="modal-header"><span>确认预订</span><span class="modal-close" onclick="closeBookModal()">×</span></div><div class="book-goods"><span class="t" id="bookGoodsTitle">-</span><span class="p" id="bookGoodsPrice">-</span></div><input type="tel" class="book-input" id="bookPhone" placeholder="手机号（选填，如 13812345678）" maxlength="11"><input type="text" class="book-input" id="bookQq" placeholder="QQ号（选填，如 123456789）" maxlength="15"><input type="text" class="book-input" id="bookWechat" placeholder="微信号（选填，如 wx_123456）" maxlength="20"><div class="book-tip">请至少填写一种联系方式，方便卖家联系您完成交易。填写后<b>仅该订单的卖家可见</b>，用于本次交易。</div><button class="btn btn-primary btn-block" onclick="submitBook()">确认预订</button></div></div>
+<div class="toast toast-global"></div>
+<script src="api.js"></script>
+<script src="icons.js"></script>
+<script>
+(function(){var goodsId=getQueryParam('id');if(!goodsId){showToast('缺少商品ID');return;}
+var detailData=null;
+loadDetail();
+function loadDetail(){get('/goods/detail/'+goodsId,null,{noToast:true}).then(function(data){detailData=data;renderDetail(data);}).catch(function(err){document.getElementById('goodsTitle').textContent='加载失败';document.getElementById('bookBtn').textContent='加载失败';showToast(err.msg||'加载失败');});}
+function renderDetail(g){
+document.getElementById('headerTitle').textContent=g.title||'商品详情';
+document.getElementById('goodsTitle').textContent=g.title||'未知商品';
+document.getElementById('goodsPrice').textContent=g.price?Number(g.price).toFixed(0):'0';
+if(g.originalPrice&&Number(g.originalPrice)>0){document.getElementById('goodsOriginal').textContent='¥'+Number(g.originalPrice).toFixed(0);document.getElementById('goodsOriginal').style.display='inline';}
+document.getElementById('goodsCondition').textContent=CONDITION_MAP[g.goodsCondition]||'';
+document.getElementById('goodsCategory').textContent=g.categoryName||'-';
+document.getElementById('goodsLocation').textContent=g.tradeLocation||'校内';
+document.getElementById('goodsViews').textContent=g.viewCount||0;
+document.getElementById('goodsTime').textContent=timeAgo(g.createTime);
+document.getElementById('goodsDesc').textContent=g.description||'暂无描述';
+renderCarousel(g.images);
+if(g.sellerId){var avatarEl=document.getElementById('sellerAvatar');if(g.sellerAvatar){avatarEl.innerHTML='<img src="'+g.sellerAvatar+'" alt="avatar">';}else{avatarEl.textContent=g.sellerNickname?g.sellerNickname.charAt(0):'?';}
+document.getElementById('sellerName').textContent=g.sellerNickname||'未知用户';document.getElementById('sellerStats').textContent='信用分: '+(g.sellerCreditScore||'0');
+document.getElementById('sellerFrozenBar').style.display=g.sellerStatus===0?'flex':'none';
+document.getElementById('sellerSection').onclick=function(){window.location.href='user-profile.html?id='+g.sellerId;};}
+document.getElementById('favHeart').classList.toggle('liked',!!g.favorited);
+document.getElementById('favCount').textContent=g.favoriteCount||0;
+renderBottomBtn(g);loadReviews();}
+var carouselIdx=0,carouselTotal=0;
+function carouselGoTo(idx){if(idx<0||idx>=carouselTotal)return;carouselIdx=idx;document.getElementById('carouselTrack').style.transform='translateX(-'+(idx*100)+'%)';document.querySelectorAll('#carouselDots .carousel-dot').forEach(function(d,i){d.classList.toggle('active',i===idx);});document.getElementById('carouselCount').textContent=(idx+1)+'/'+carouselTotal;}
+window.carouselPrev=function(){carouselGoTo(carouselIdx-1);};
+window.carouselNext=function(){carouselGoTo(carouselIdx+1);};
+function renderCarousel(images){var track=document.getElementById('carouselTrack');var dots=document.getElementById('carouselDots');var count=document.getElementById('carouselCount');var list=(images&&images.length>0)?images:[];if(list.length===0){track.innerHTML='<div class="carousel-slide"><i class="icon placeholder" data-icon="camera"></i></div>';dots.innerHTML='';count.textContent='0/0';document.getElementById('carouselPrev').style.display='none';document.getElementById('carouselNext').style.display='none';return;}
+track.innerHTML=list.map(function(src){return '<div class="carousel-slide"><img src="'+src+'" alt="商品图片" loading="lazy"></div>';}).join('');dots.innerHTML=list.map(function(_,i){return '<span class="carousel-dot'+(i===0?' active':'')+'" data-index="'+i+'"></span>';}).join('');carouselTotal=list.length;carouselGoTo(0);
+document.getElementById('carouselPrev').style.display=list.length>1?'flex':'none';document.getElementById('carouselNext').style.display=list.length>1?'flex':'none';
+var startX=0;track.addEventListener('touchstart',function(e){startX=e.touches[0].clientX;});track.addEventListener('touchend',function(e){var diff=startX-e.changedTouches[0].clientX;if(Math.abs(diff)<50)return;if(diff>0)carouselGoTo(carouselIdx+1);else if(diff<0)carouselGoTo(carouselIdx-1);});track.addEventListener('mousedown',function(e){startX=e.clientX;});track.addEventListener('mouseup',function(e){var diff=startX-e.clientX;if(Math.abs(diff)<50)return;if(diff>0)carouselGoTo(carouselIdx+1);else if(diff<0)carouselGoTo(carouselIdx-1);});}
+function renderBottomBtn(g){var btn=document.getElementById('bookBtn');var chatBtn=document.getElementById('chatBtn');var user=getCurrentUser();if(!user){btn.textContent='登录后预订';btn.className='btn-book primary';btn.onclick=function(){redirectToLogin();};chatBtn.style.display='none';return;}
+if(g.isOwner){chatBtn.style.display='none';
+if(g.status===1){btn.textContent='下架商品';btn.className='btn-book owner';btn.onclick=function(){if(!confirm('确定下架该商品吗？'))return;put('/goods/'+goodsId+'/takedown').then(function(){showToast('已下架');loadDetail();}).catch(function(err){showToast(err.msg||'操作失败');});};}
+else if(g.status===0){btn.textContent='重新上架';btn.className='btn-book owner';btn.onclick=function(){put('/goods/'+goodsId+'/relist').then(function(){showToast('已重新上架');loadDetail();}).catch(function(err){showToast(err.msg||'操作失败');});};}
+else if(g.status===2){btn.textContent='已被预订';btn.className='btn-book disabled';btn.onclick=null;}
+else if(g.status===3){btn.textContent='已售出';btn.className='btn-book disabled';btn.onclick=null;}
+return;}
+document.getElementById('chatBtn').style.display='flex';
+if(g.sellerStatus===0){btn.textContent='卖家已被冻结，暂停交易';btn.className='btn-book disabled';btn.onclick=null;return;}
+if(g.status===0){btn.textContent='已下架';btn.className='btn-book offline';btn.onclick=null;}else if(g.status===2){btn.textContent='已被预订';btn.className='btn-book disabled';btn.onclick=null;}else if(g.status===3){btn.textContent='已售出';btn.className='btn-book disabled';btn.onclick=null;}else if(g.status===1){btn.textContent='我要预订';btn.className='btn-book primary';btn.onclick=bookGoods;}}
+document.getElementById('favBtn').addEventListener('click',function(){if(!requireAuth())return;if(!detailData)return;var wasFav=detailData.favorited;(wasFav?del:post)('/goods/'+goodsId+'/favorite',null,{noToast:true}).then(function(){detailData.favorited=!wasFav;document.getElementById('favHeart').classList.toggle('liked',detailData.favorited);var count=parseInt(document.getElementById('favCount').textContent)||0;document.getElementById('favCount').textContent=detailData.favorited?count+1:Math.max(0,count-1);showToast(detailData.favorited?'已收藏':'已取消收藏');}).catch(function(err){showToast(err.msg||'操作失败');});});
+document.getElementById('chatBtn').addEventListener('click',function(){if(!requireAuth())return;if(!detailData||!detailData.sellerId){showToast('无法发起会话');return;}
+post('/chat/conversation',{goodsId:parseInt(goodsId),targetUserId:detailData.sellerId},{noToast:true}).then(function(convId){window.location.href='chat-detail.html?id='+convId;}).catch(function(err){showToast(err.msg||'发起会话失败');});});
+function bookGoods(){if(!requireAuth())return;
+if(detailData){document.getElementById('bookGoodsTitle').textContent=detailData.title||'';document.getElementById('bookGoodsPrice').textContent=detailData.price?'¥'+Number(detailData.price).toFixed(0):'';}
+document.getElementById('bookPhone').value='';document.getElementById('bookQq').value='';document.getElementById('bookWechat').value='';
+document.getElementById('bookModal').classList.add('show');}
+window.closeBookModal=function(){document.getElementById('bookModal').classList.remove('show');};
+window.submitBook=function(){
+var phone=document.getElementById('bookPhone').value.trim();
+var qq=document.getElementById('bookQq').value.trim();
+var wechat=document.getElementById('bookWechat').value.trim();
+if(!phone&&!qq&&!wechat){showToast('请至少填写一种联系方式，方便卖家联系您');return;}
+if(phone&&!/^1[3-9]\d{9}$/.test(phone)){showToast('手机号格式不正确');return;}
+if(qq&&!/^\d{5,15}$/.test(qq)){showToast('QQ号应为5-15位数字');return;}
+if(wechat&&!/^[a-zA-Z0-9_-]{6,20}$/.test(wechat)){showToast('微信号应为6-20位字母/数字/下划线');return;}
+var btn=document.getElementById('bookBtn');btn.textContent='预订中...';btn.onclick=null;
+post('/order',{goodsId:parseInt(goodsId),buyerPhone:phone||undefined,buyerQq:qq||undefined,buyerWechat:wechat||undefined}).then(function(orderId){closeBookModal();showToast('预订成功！');btn.textContent='已预订';btn.className='btn-book disabled';loadDetail();}).catch(function(err){btn.textContent='我要预订';btn.className='btn-book primary';btn.onclick=bookGoods;showToast(err.msg||'预订失败');});}
+function loadReviews(){if(!detailData||!detailData.sellerId)return;get('/review/user/'+detailData.sellerId,{pageNum:1,pageSize:5},{noToast:true}).then(function(data){var container=document.getElementById('reviewsContainer');var records=(data&&data.records)||[];document.getElementById('reviewRate').textContent='好评率 '+(data.goodRate!=null?data.goodRate:100)+'%';if(records.length===0){container.innerHTML='<div class="empty-state" style="padding:16px 0"><p style="font-size:var(--font-size-sm)">暂无评价</p></div>';return;}
+container.innerHTML=records.map(function(r){var stars='';for(var i=0;i<(r.score||0);i++)stars+='★';return '<div class="review-item"><div class="review-user"><span class="name">'+escapeHtml(r.evaluatorNickname||'匿名')+'</span><span class="stars">'+stars+'</span></div>'+(r.content?'<div class="review-content">'+escapeHtml(r.content)+'</div>':'')+'<div class="review-time">'+timeAgo(r.createTime)+'</div></div>';}).join('');}).catch(function(){});}
+var selectedReportType=null;document.getElementById('reportBtn').addEventListener('click',function(){if(!requireAuth())return;document.getElementById('reportModal').classList.add('show');});
+document.querySelectorAll('.report-type-item').forEach(function(el){el.addEventListener('click',function(){document.querySelectorAll('.report-type-item').forEach(function(i){i.classList.remove('active');});el.classList.add('active');selectedReportType=parseInt(el.dataset.type);});});
+window.submitReport=function(){if(!selectedReportType){showToast('请选择举报类型');return;}
+var btn=document.getElementById('reportSubmitBtn');if(btn.disabled)return;
+btn.disabled=true;btn.textContent='提交中...';
+var typeMap={1:'虚假商品',2:'描述不符',3:'违禁品',4:'广告骚扰',5:'联系方式违规',6:'其他违规'};
+var reason=typeMap[selectedReportType]||'其他违规';
+var desc=document.getElementById('reportDesc').value.trim();post('/report',{targetType:2,targetId:parseInt(goodsId),reason:reason,description:desc||''}).then(function(){showToast('举报已提交，等待处理');closeReport();}).catch(function(err){showToast(err.msg||'提交失败');btn.disabled=false;btn.textContent='提交举报';});};
+window.closeReport=function(){document.getElementById('reportModal').classList.remove('show');selectedReportType=null;document.querySelectorAll('.report-type-item').forEach(function(i){i.classList.remove('active');});document.getElementById('reportDesc').value='';};
+function getQueryParam(name){var m=window.location.search.match(new RegExp('[?&]'+name+'=([^&]*)'));return m?decodeURIComponent(m[1]):null;}
+function escapeHtml(t){if(!t)return'';var d=document.createElement('div');d.appendChild(document.createTextNode(t));return d.innerHTML;}
+})();
+</script>
+</body>
+</html>

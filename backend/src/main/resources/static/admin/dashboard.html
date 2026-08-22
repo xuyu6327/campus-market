@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>仪表盘 - 管理后台</title>
+<link rel="stylesheet" href="../common.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<div class="admin-page">
+  <div class="admin-page-header">
+    <div>
+      <h1>仪表盘</h1>
+      <div class="sub">平台运营数据总览</div>
+    </div>
+    <button class="btn btn-outline btn-sm" id="refreshBtn"><i class="icon" data-icon="refresh"></i>刷新数据</button>
+  </div>
+
+  <!-- 累计指标 -->
+  <div class="stat-grid" id="statGrid"></div>
+
+  <!-- 待处理举报快捷入口 -->
+  <div class="admin-card" style="margin-top:16px">
+    <div class="card-title">快捷处理</div>
+    <div style="padding:16px 20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <span style="font-size:var(--font-size-sm);color:var(--color-text-secondary)" id="quickTip">待处理举报将在此提醒</span>
+        <button class="btn btn-primary btn-sm" id="goReportsBtn"><i class="icon" data-icon="flag"></i>去处理举报</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../api.js"></script>
+<script src="../icons.js"></script>
+<script src="common.js"></script>
+<script>
+/* GET /admin/dashboard → AdminDashboardVO 11 个指标 */
+var CARDS = [
+  { key: 'totalUsers',          label: '总用户数',      icon: 'user',  color: '#3B82F6' },
+  { key: 'totalGoods',          label: '总商品数',      icon: 'box',   color: '#FF6B35' },
+  { key: 'totalOrders',         label: '总订单数',      icon: 'doc',   color: '#2EC4B6' },
+  { key: 'totalTrades',         label: '累计完成交易',  icon: 'money', color: '#10B981' },
+  { key: 'todayNewUsers',       label: '今日新增用户',  icon: 'add',   color: '#8B5CF6' },
+  { key: 'todayNewGoods',       label: '今日新发布',    icon: 'add',   color: '#F59E0B' },
+  { key: 'todayTradedGoods',    label: '今日售出',      icon: 'money', color: '#10B981' },
+  { key: 'todayCancelledOrders', label: '今日取消订单', icon: 'close', color: '#EF4444' },
+  { key: 'onSaleGoods',         label: '在售商品',      icon: 'box',   color: '#FF6B35' },
+  { key: 'pendingOrders',       label: '进行中订单',    icon: 'clock', color: '#2EC4B6' },
+  { key: 'pendingReports',      label: '待处理举报',    icon: 'flag',  color: '#EF4444' }
+];
+
+function loadDashboard() {
+  get('/admin/dashboard').then(function (data) {
+    data = data || {};
+    var html = '';
+    CARDS.forEach(function (c) {
+      var v = data[c.key];
+      if (v === undefined || v === null) v = 0;
+      var hot = (c.key === 'pendingReports' && v > 0) ? ' hot' : '';
+      var clickable = '';
+      if (c.key === 'pendingReports') clickable = ' style="cursor:pointer" onclick="goPage(\'reports.html\')" title="去处理举报"';
+      html += '<div class="stat-card' + hot + '"' + clickable + '>' +
+        '<div class="stat-icon" style="background:' + c.color + '"><i class="icon" data-icon="' + c.icon + '"></i></div>' +
+        '<div><div class="stat-value">' + v + '</div><div class="stat-label">' + c.label + '</div></div>' +
+        (hot ? '<span class="link-arrow">›</span>' : '') +
+        '</div>';
+    });
+    document.getElementById('statGrid').innerHTML = html;
+
+    var tip = document.getElementById('quickTip');
+    if (data.pendingReports > 0) {
+      tip.innerHTML = '有 <span style="color:var(--color-danger);font-weight:700">' + data.pendingReports + '</span> 条举报待处理，请及时核实处理';
+    } else {
+      tip.textContent = '当前无待处理举报';
+    }
+  }).catch(function () {});
+}
+
+document.getElementById('refreshBtn').onclick = loadDashboard;
+document.getElementById('goReportsBtn').onclick = function () { goPage('reports.html'); };
+
+requireAdmin().then(function (ok) {
+  if (!ok) return;
+  loadDashboard();
+});
+</script>
+</body>
+</html>

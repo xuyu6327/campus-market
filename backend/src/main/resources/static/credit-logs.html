@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>信用分记录 - 校园二手交易平台</title><link rel="stylesheet" href="common.css">
+<style>
+.credit-page{background:var(--color-bg);min-height:100vh;padding-bottom:40px;}
+.credit-header{background:var(--color-surface);padding:var(--space-xl);text-align:center;margin-bottom:var(--space-sm);}
+.credit-header .score{font-size:40px;font-weight:800;color:var(--color-primary);}
+.credit-header .label{font-size:var(--font-size-sm);color:var(--color-text-tertiary);margin-top:4px;}
+.log-list{padding:var(--space-md);}
+.log-item{display:flex;align-items:center;gap:var(--space-md);padding:14px 16px;background:var(--color-surface);border-radius:var(--radius-md);margin-bottom:var(--space-sm);box-shadow:var(--shadow-sm);}
+.log-delta{font-weight:800;font-size:var(--font-size-lg);min-width:40px;text-align:center;}
+.log-delta.positive{color:var(--color-success);}
+.log-delta.negative{color:var(--color-danger);}
+.log-info{flex:1;min-width:0;}
+.log-reason{font-size:var(--font-size-sm);font-weight:600;}
+.log-time{font-size:var(--font-size-xs);color:var(--color-text-tertiary);margin-top:2px;}
+.log-score{font-size:var(--font-size-xs);color:var(--color-text-tertiary);}
+</style>
+</head>
+<body>
+<div class="credit-page">
+  <div class="page-header"><span class="page-header-back" onclick="history.back()">←</span><span class="page-header-title">信用分记录</span><a class="page-header-home" href="index.html"><i class="icon" data-icon="home"></i></a></div>
+  <div class="credit-header" id="creditHeader"><div class="score" id="totalScore">-</div><div class="label">当前信用分</div></div>
+  <div class="log-list" id="logList"><div class="loading">加载中...</div></div>
+</div>
+<div class="toast toast-global"></div>
+<script src="api.js"></script>
+<script src="icons.js"></script>
+<script>
+(function(){
+  if(!requireAuth())return;
+  get('/user/credit').then(function(score){document.getElementById('totalScore').textContent=score!=null?score:'-';}).catch(function(){});
+  var pageNum=1,hasMore=true,loading=false;
+  function load(reset){
+    if(loading||!hasMore)return;
+    loading=true;
+    if(reset)document.getElementById('logList').innerHTML='<div class="loading">加载中...</div>';
+    get('/user/credit/logs',{pageNum:pageNum,pageSize:20}).then(function(page){
+      loading=false;
+      var list=page.records||[];
+      var el=document.getElementById('logList');
+      if(reset){
+        if(list.length===0){el.innerHTML='<div class="empty-state"><i class="empty-icon" data-icon="chart"></i><p>暂无记录</p></div>';return;}
+        el.innerHTML=list.map(function(l){return logItem(l);}).join('');
+      }else{list.forEach(function(l){el.innerHTML+=logItem(l);});}
+      hasMore=list.length>=20;pageNum++;
+    }).catch(function(){loading=false;});
+  }
+  function logItem(l){
+    var cls=l.changeValue>0?'positive':'negative';
+    var sign=l.changeValue>0?'+':'';
+    var bg=l.changeValue>0?'background:var(--color-success-light);':'background:var(--color-danger-light);';
+    return '<div class="log-item"><div class="log-delta '+cls+'" style="'+bg+'padding:8px 0;border-radius:var(--radius-sm)">'+sign+l.changeValue+'</div><div class="log-info"><div class="log-reason">'+escapeHtml(l.reason||'')+'</div><div class="log-time">'+timeAgo(l.createTime)+'</div></div><div class="log-score">'+l.beforeScore+'→'+l.afterScore+'</div></div>';
+  }
+  window.addEventListener('scroll',function(){
+    if(loading||!hasMore)return;
+    var sh=document.documentElement.scrollHeight,st=window.scrollY||document.documentElement.scrollTop,ch=document.documentElement.clientHeight;
+    if(sh-st-ch<200)load();
+  });
+  load(true);
+  function escapeHtml(t){if(!t)return'';var d=document.createElement('div');d.appendChild(document.createTextNode(t));return d.innerHTML;}
+})();
+</script>
+</body>
+</html>

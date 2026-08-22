@@ -1,0 +1,27 @@
+# 编译输出
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### IDE ###
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+
+### 日志 ###
+logs/
+*.log
+
+### 上传文件 ###
+uploads/
+
+### 系统文件 ###
+.DS_Store
+Thumbs.db

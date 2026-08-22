@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>发布商品 - 校园二手交易平台</title>
+<link rel="stylesheet" href="common.css">
+<style>
+.publish-page { background: var(--color-bg); min-height: 100vh; padding-bottom: 40px; }
+.form-section {
+  background: var(--color-surface);
+  margin-bottom: var(--space-sm);
+  padding: var(--space-lg);
+}
+.form-section-title {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-md);
+}
+.form-section-title .required { color: var(--color-danger); }
+
+/* 分类选择 */
+.cat-selector { display: flex; gap: var(--space-sm); }
+.cat-selector select {
+  flex: 1;
+  padding: 11px 12px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font-size: var(--font-size-sm);
+  outline: none;
+  appearance: auto;
+}
+.cat-selector select:focus { border-color: var(--color-primary); }
+
+/* 图片上传 */
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+.upload-box {
+  aspect-ratio: 1;
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  position: relative;
+}
+.upload-box:hover { border-color: var(--color-primary); }
+.upload-box .upload-icon { width: 28px; height: 28px; margin-bottom: 4px; color: var(--color-text-tertiary); }
+.upload-box .count { font-size: 10px; }
+.image-item {
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  position: relative;
+}
+.image-item img { width: 100%; height: 100%; object-fit: cover; }
+.image-item .remove {
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* 价格行 */
+.price-row { display: flex; gap: var(--space-sm); align-items: flex-start; }
+.price-row .form-group { flex: 1; }
+
+/* 成色选择 */
+.condition-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+}
+.condition-item {
+  padding: 10px;
+  text-align: center;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.condition-item:hover { border-color: var(--color-primary); }
+.condition-item.active { border-color: var(--color-primary); background: var(--color-primary-light); color: var(--color-primary); font-weight: 600; }
+
+/* 联系方式 */
+.contact-method {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+.contact-method-item {
+  flex: 1;
+  padding: 10px;
+  text-align: center;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.contact-method-item:hover { border-color: var(--color-secondary); }
+.contact-method-item.active { border-color: var(--color-secondary); background: var(--color-secondary-light); color: var(--color-secondary); font-weight: 600; }
+
+/* 提交按钮区 */
+.submit-bar {
+  position: sticky;
+  bottom: 0;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.04);
+}
+.submit-bar .btn { padding: 14px; font-size: var(--font-size-base); font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="publish-page">
+
+  <!-- 顶部 -->
+  <div class="page-header">
+    <span class="page-header-back" onclick="history.back()">←</span>
+    <span class="page-header-title">发布商品</span><a class="page-header-home" href="index.html"><i class="icon" data-icon="home"></i></a>
+  </div>
+
+  <form id="publishForm" onsubmit="return false;">
+    <!-- 分类 -->
+    <div class="form-section">
+      <div class="form-section-title"><span class="required">*</span> 商品分类</div>
+      <div class="cat-selector">
+        <select id="catLevel1" onchange="loadSubCategories()">
+          <option value="">选择分类</option>
+        </select>
+        <select id="catLevel2" style="display:none">
+          <option value="">选择子分类</option>
+        </select>
+      </div>
+      <div class="form-hint" id="catHint">请选择一个分类</div>
+    </div>
+
+    <!-- 标题 -->
+    <div class="form-section">
+      <div class="form-group" style="margin:0">
+        <div class="form-section-title"><span class="required">*</span> 商品标题</div>
+        <input class="form-input" id="goodsTitle" maxlength="100" placeholder="请输入商品标题，4-30字" required>
+        <div class="form-hint"><span id="titleCount">0</span>/30</div>
+      </div>
+    </div>
+
+    <!-- 描述 -->
+    <div class="form-section">
+      <div class="form-group" style="margin:0">
+        <div class="form-section-title">商品描述</div>
+        <textarea class="form-input" id="goodsDesc" maxlength="500" rows="4" placeholder="描述商品成色、规格、购买时间等信息（选填）" style="resize:vertical;min-height:80px"></textarea>
+        <div class="form-hint"><span id="descCount">0</span>/500</div>
+      </div>
+    </div>
+
+    <!-- 价格 -->
+    <div class="form-section">
+      <div class="form-section-title"><span class="required">*</span> 价格</div>
+      <div class="price-row">
+        <div class="form-group" style="margin:0">
+          <input class="form-input" id="goodsPrice" type="number" min="0.01" max="99999" step="0.01" placeholder="售价" required>
+        </div>
+        <div class="form-group" style="margin:0">
+          <input class="form-input" id="originalPrice" type="number" min="0" max="99999" step="0.01" placeholder="原价（选填）">
+        </div>
+      </div>
+    </div>
+
+    <!-- 成色 -->
+    <div class="form-section">
+      <div class="form-section-title"><span class="required">*</span> 商品成色</div>
+      <div class="condition-grid" id="conditionGrid">
+        <div class="condition-item" data-value="1">全新未拆</div>
+        <div class="condition-item" data-value="2">几乎全新</div>
+        <div class="condition-item" data-value="3">轻微使用痕迹</div>
+        <div class="condition-item" data-value="4">明显使用痕迹</div>
+        <div class="condition-item" data-value="5">故障/坏件</div>
+      </div>
+    </div>
+
+    <!-- 图片 -->
+    <div class="form-section">
+      <div class="form-section-title"><span class="required">*</span> 商品图片 <span class="form-hint" style="font-weight:400">至少1张，最多9张</span></div>
+      <div class="image-grid" id="imageGrid">
+        <div class="upload-box" id="uploadTrigger">
+          <i class="upload-icon" data-icon="camera"></i>
+          <span>点击上传</span>
+        </div>
+      </div>
+      <input type="file" id="fileInput" accept="image/jpeg,image/png,image/gif,image/webp" multiple style="display:none">
+    </div>
+
+    <!-- 交易地点 -->
+    <div class="form-section">
+      <div class="form-group" style="margin:0">
+        <div class="form-section-title">交易地点</div>
+        <input class="form-input" id="tradeLocation" placeholder="如一食堂、图书馆、XX宿舍楼等" maxlength="50">
+      </div>
+    </div>
+
+    <!-- 联系方式 -->
+    <div class="form-section">
+      <div class="form-section-title"><span class="required">*</span> 联系方式</div>
+      <div class="contact-method" id="contactMethod">
+        <div class="contact-method-item active" data-value="1"><i class="icon" data-icon="phone"></i> 手机号</div>
+        <div class="contact-method-item" data-value="3"><i class="icon" data-icon="chat"></i> 微信号</div>
+        <div class="contact-method-item" data-value="2"><i class="icon" data-icon="doc"></i> QQ号</div>
+      </div>
+      <input class="form-input" id="contactValue" placeholder="请输入手机号" maxlength="20">
+    </div>
+  </form>
+
+  <!-- 提交 -->
+  <div class="submit-bar">
+    <button class="btn btn-primary btn-block" id="submitBtn" onclick="submitGoods()">发布商品</button>
+  </div>
+
+</div>
+
+<div class="toast toast-global"></div>
+
+<script src="api.js"></script>
+<script src="icons.js"></script>
+<script>
+(function() {
+  // === 状态 ===
+  var categories = {};
+  var selectedCondition = null;
+  var selectedContactMethod = 1;
+  var uploadedImages = [];
+
+  // === 初始化 ===
+  loadCategories();
+  bindEvents();
+
+  // === 加载分类 ===
+  function loadCategories() {
+    get('/goods/category', {}, { noAuth: true, noToast: true })
+      .then(function(list) {
+        var cats = list || [];
+        // 按 parentId 分组
+        cats.forEach(function(c) {
+          if (!categories[c.parentId || 0]) categories[c.parentId || 0] = [];
+          categories[c.parentId || 0].push(c);
+        });
+        // 渲染一级分类
+        var level1 = document.getElementById('catLevel1');
+        (categories['0'] || []).forEach(function(c) {
+          var opt = document.createElement('option');
+          opt.value = c.id;
+          opt.textContent = c.name;
+          level1.appendChild(opt);
+        });
+      });
+  }
+
+  window.loadSubCategories = function() {
+    var parentId = document.getElementById('catLevel1').value;
+    var level2 = document.getElementById('catLevel2');
+    var hint = document.getElementById('catHint');
+    level2.innerHTML = '<option value="">选择子分类</option>';
+    var subs = categories[parentId] || [];
+    if (subs.length > 0) {
+      level2.style.display = 'block';
+      level2.value = '';
+      subs.forEach(function(c) {
+        var opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name;
+        level2.appendChild(opt);
+      });
+      hint.textContent = '请选择子分类';
+    } else {
+      level2.style.display = 'none';
+      hint.textContent = '已选择：' + (document.getElementById('catLevel1').selectedOptions[0]?.text || '');
+    }
+  };
+
+  // === 事件绑定 ===
+  function bindEvents() {
+    // 标题字数
+    document.getElementById('goodsTitle').addEventListener('input', function() {
+      document.getElementById('titleCount').textContent = this.value.length;
+      if (this.value.length > 30) this.value = this.value.slice(0, 30);
+    });
+    // 描述字数
+    document.getElementById('goodsDesc').addEventListener('input', function() {
+      document.getElementById('descCount').textContent = this.value.length;
+      if (this.value.length > 500) this.value = this.value.slice(0, 500);
+    });
+    // 成色选择
+    document.querySelectorAll('.condition-item').forEach(function(el) {
+      el.addEventListener('click', function() {
+        document.querySelectorAll('.condition-item').forEach(function(i) { i.classList.remove('active'); });
+        el.classList.add('active');
+        selectedCondition = parseInt(el.dataset.value);
+      });
+    });
+    // 联系方式选择
+    document.querySelectorAll('.contact-method-item').forEach(function(el) {
+      el.addEventListener('click', function() {
+        document.querySelectorAll('.contact-method-item').forEach(function(i) { i.classList.remove('active'); });
+        el.classList.add('active');
+        selectedContactMethod = parseInt(el.dataset.value);
+        var tips = { 1: '请输入手机号', 2: '请输入QQ号', 3: '请输入微信号' };
+        document.getElementById('contactValue').placeholder = tips[selectedContactMethod] || '请输入联系方式';
+      });
+    });
+    // 图片上传
+    document.getElementById('uploadTrigger').addEventListener('click', function() {
+      if (uploadedImages.length >= 9) { showToast('最多上传9张图片'); return; }
+      document.getElementById('fileInput').click();
+    });
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+      var files = Array.from(e.target.files || []);
+      var remain = 9 - uploadedImages.length;
+      files.slice(0, remain).forEach(function(file) {
+        uploadImage(file);
+      });
+      this.value = '';
+    });
+  }
+
+  // === 图片上传 ===
+  function uploadImage(file) {
+    showToast('上传中...');
+    uploadFile(file)
+      .then(function(url) {
+        uploadedImages.push(url);
+        renderImages();
+        showToast('上传成功');
+      })
+      .catch(function(err) {
+        showToast(err.msg || '上传失败');
+      });
+  }
+
+  function renderImages() {
+    var grid = document.getElementById('imageGrid');
+    var html = '';
+    uploadedImages.forEach(function(url, i) {
+      html += '<div class="image-item"><img src="' + url + '" alt="图片"><span class="remove" data-index="' + i + '">×</span></div>';
+    });
+    if (uploadedImages.length < 9) {
+      html += '<div class="upload-box" id="uploadTrigger"><i class="upload-icon" data-icon="camera"></i><span class="count">' + uploadedImages.length + '/9</span></div>';
+    }
+    grid.innerHTML = html;
+
+    // 重新绑定上传
+    var trigger = document.getElementById('uploadTrigger');
+    if (trigger) {
+      trigger.addEventListener('click', function() {
+        document.getElementById('fileInput').click();
+      });
+    }
+    // 删除图片
+    grid.querySelectorAll('.image-item .remove').forEach(function(el) {
+      el.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var idx = parseInt(this.dataset.index);
+        uploadedImages.splice(idx, 1);
+        renderImages();
+      });
+    });
+  }
+
+  // === 提交 ===
+  window.submitGoods = function() {
+    // 校验
+    var cat1 = document.getElementById('catLevel1').value;
+    var cat2 = document.getElementById('catLevel2').value;
+    var categoryId = cat2 || cat1;
+    if (!categoryId) { showToast('请选择商品分类'); return; }
+    var title = document.getElementById('goodsTitle').value.trim();
+    if (!title || title.length < 4) { showToast('标题至少4个字'); return; }
+    var price = document.getElementById('goodsPrice').value;
+    if (!price || parseFloat(price) <= 0) { showToast('请输入有效价格'); return; }
+    if (parseFloat(price) > 99999) { showToast('价格不能超过99999'); return; }
+    if (!selectedCondition) { showToast('请选择商品成色'); return; }
+    if (uploadedImages.length === 0) { showToast('请至少上传1张图片'); return; }
+    var contactVal = document.getElementById('contactValue').value.trim();
+    if (!contactVal) { showToast('请输入联系方式'); return; }
+
+    var data = {
+      title: title,
+      categoryId: parseInt(categoryId),
+      price: parseFloat(price),
+      goodsCondition: selectedCondition,
+      images: uploadedImages,
+      contactMethod: selectedContactMethod,
+      description: document.getElementById('goodsDesc').value.trim() || undefined,
+      tradeLocation: document.getElementById('tradeLocation').value.trim() || undefined
+    };
+
+    var origPrice = document.getElementById('originalPrice').value;
+    if (origPrice && parseFloat(origPrice) > 0) {
+      if (parseFloat(origPrice) > 99999) { showToast('原价不能超过99999'); return; }
+      data.originalPrice = parseFloat(origPrice);
+    }
+
+    if (selectedContactMethod === 1) data.contactPhone = contactVal;
+    else if (selectedContactMethod === 2) data.contactQq = contactVal;
+    else if (selectedContactMethod === 3) data.contactWechat = contactVal;
+
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = '发布中...';
+
+    post('/goods', data)
+      .then(function(goodsId) {
+        showToast('发布成功！');
+        setTimeout(function() { window.location.href = 'detail.html?id=' + goodsId; }, 800);
+      })
+      .catch(function(err) {
+        btn.disabled = false;
+        btn.textContent = '发布商品';
+        showToast(err.msg || '发布失败');
+      });
+  };
+
+})();
+</script>
+</body>
+</html>

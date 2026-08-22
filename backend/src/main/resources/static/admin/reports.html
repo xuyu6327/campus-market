@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>举报管理 - 管理后台</title>
+<link rel="stylesheet" href="../common.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<div class="admin-page">
+  <div class="admin-page-header">
+    <div>
+      <h1>举报管理</h1>
+      <div class="sub">核实举报并处理：警告 / 下架商品 / 封禁用户 / 驳回（恶意举报可扣举报人信用分）</div>
+    </div>
+  </div>
+
+  <!-- 筛选 -->
+  <div class="filter-bar">
+    <select class="filter-select" id="statusSelect">
+      <option value="">全部状态</option>
+      <option value="0">待处理</option>
+      <option value="1">已警告</option>
+      <option value="2">已下架</option>
+      <option value="3">已封禁</option>
+      <option value="4">已驳回</option>
+    </select>
+    <button class="btn btn-primary btn-sm" id="searchBtn"><i class="icon" data-icon="search"></i>搜索</button>
+  </div>
+
+  <!-- 列表 -->
+  <div class="admin-card">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>举报人</th>
+          <th>目标</th>
+          <th>原因</th>
+          <th>描述</th>
+          <th>状态</th>
+          <th>举报时间</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="reportBody">
+        <tr><td colspan="7"><div class="loading">加载中...</div></td></tr>
+      </tbody>
+    </table>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</div>
+
+<script src="../api.js"></script>
+<script src="../icons.js"></script>
+<script src="common.js"></script>
+<script>
+var REPORT_STATUS = {
+  0: { text: '待处理', cls: 'tag-warning' },
+  1: { text: '已警告', cls: 'tag-primary' },
+  2: { text: '已下架', cls: 'tag-secondary' },
+  3: { text: '已封禁', cls: 'tag-danger' },
+  4: { text: '已驳回', cls: 'tag-info' }
+};
+
+var pageNum = 1, pageSize = 10;
+var status = '';
+
+function loadReports() {
+  document.getElementById('reportBody').innerHTML = '<tr><td colspan="7"><div class="loading">加载中...</div></td></tr>';
+  var params = { pageNum: pageNum, pageSize: pageSize };
+  if (status !== '') params.status = parseInt(status, 10);
+  get('/admin/report/list', params).then(function (page) {
+    page = page || {};
+    var list = page.records || [];
+    if (!list.length) {
+      document.getElementById('reportBody').innerHTML = '<tr><td colspan="7"><div class="empty-wrap">暂无举报数据</div></td></tr>';
+    } else {
+      document.getElementById('reportBody').innerHTML = list.map(renderRow).join('');
+    }
+    renderPagination('pagination', page, function (p) { pageNum = p; loadReports(); });
+  }).catch(function () {
+    document.getElementById('reportBody').innerHTML = '<tr><td colspan="7"><div class="empty-wrap">加载失败</div></td></tr>';
+  });
+}
+
+function renderRow(r) {
+  var st = REPORT_STATUS[r.status] || REPORT_STATUS[0];
+  var targetType = r.targetType == 1
+    ? '<span class="tag tag-secondary">用户</span>'
+    : '<span class="tag tag-primary">商品</span>';
+  var ops = r.status === 0
+    ? '<button class="op-btn success" data-act="handle" data-id="' + r.id + '">处理</button>'
+    : '<button class="op-btn" data-act="view" data-id="' + r.id + '">查看</button>';
+  return '<tr>' +
+    '<td>' + escapeHtml(r.reporterNickname || 'ID:' + (r.reporterId || '-')) + '</td>' +
+    '<td>' + targetType + ' <span class="cell-title">' + escapeHtml(r.targetName || '#' + (r.targetId || '-')) + '</span></td>' +
+    '<td class="cell-title">' + escapeHtml(r.reason || '-') + '</td>' +
+    '<td class="cell-title">' + escapeHtml(r.description || '-') + '</td>' +
+    '<td><span class="tag ' + st.cls + '">' + st.text + '</span></td>' +
+    '<td class="cell-sub">' + escapeHtml((r.createTime || '').replace('T', ' ').slice(0, 19)) + '</td>' +
+    '<td>' + ops + '</td>' +
+    '</tr>';
+}
+
+/* ---- 操作事件 ---- */
+document.getElementById('reportBody').onclick = function (e) {
+  var btn = e.target.closest('.op-btn');
+  if (!btn) return;
+  var act = btn.getAttribute('data-act');
+  var id = parseInt(btn.getAttribute('data-id'), 10);
+  if (act === 'handle') openHandleModal(id);
+  else if (act === 'view') openHandleModal(id, true);
+};
+
+/* ---- 处理弹窗（只读查看 / 处理表单） ---- */
+function openHandleModal(id, readonly) {
+  get('/admin/report/' + id).then(function (r) {
+    r = r || {};
+    var st = REPORT_STATUS[r.status] || REPORT_STATUS[0];
+    var targetType = r.targetType == 1 ? '用户' : '商品';
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay show';
+    overlay.innerHTML =
+      '<div class="modal-content admin-modal-lg">' +
+      '<div class="modal-header"><span>举报详情 #' + (r.id || '') + '</span>' +
+      '<button class="modal-close" id="mClose">&times;</button></div>' +
+      '<div class="detail-grid" style="margin-bottom:16px">' +
+      '<div class="detail-item"><div class="k">举报人</div><div class="v">' + escapeHtml(r.reporterNickname || '-') + '</div></div>' +
+      '<div class="detail-item"><div class="k">目标</div><div class="v">' + targetType + ' · ' + escapeHtml(r.targetName || '#' + (r.targetId || '-')) + '</div></div>' +
+      '<div class="detail-item"><div class="k">原因</div><div class="v">' + escapeHtml(r.reason || '-') + '</div></div>' +
+      '<div class="detail-item"><div class="k">状态</div><div class="v"><span class="tag ' + st.cls + '">' + st.text + '</span></div></div>' +
+      '<div class="detail-item full"><div class="k">描述</div><div class="detail-desc">' + escapeHtml(r.description || '无') + '</div></div>' +
+      (r.handleResult ? '<div class="detail-item full"><div class="k">处理结果</div><div class="detail-desc">' + escapeHtml(r.handleResult) + '</div></div>' : '') +
+      (r.handlerId ? '<div class="detail-item"><div class="k">处理人</div><div class="v">ID:' + r.handlerId + '</div></div>' : '') +
+      (r.handleTime ? '<div class="detail-item"><div class="k">处理时间</div><div class="v">' + escapeHtml(String(r.handleTime).replace('T', ' ').slice(0, 19)) + '</div></div>' : '') +
+      '</div>' +
+      (readonly ? '' :
+        '<div class="form-group"><label class="form-label">处理方式</label>' +
+        '<div class="radio-group" id="statusGroup">' +
+        '<label class="radio-item" data-v="1"><input type="radio" name="hStatus" value="1"><span>警告</span><span class="desc">提醒被举报方</span></label>' +
+        '<label class="radio-item" data-v="2"><input type="radio" name="hStatus" value="2"><span>下架商品</span><span class="desc">强制下架目标商品</span></label>' +
+        '<label class="radio-item" data-v="3"><input type="radio" name="hStatus" value="3"><span>封禁用户</span><span class="desc">封禁被举报用户（不能封禁管理员）</span></label>' +
+        '<label class="radio-item" data-v="4"><input type="radio" name="hStatus" value="4"><span>驳回</span><span class="desc">举报不成立，可标记恶意举报</span></label>' +
+        '</div></div>' +
+        '<div class="form-group"><label class="form-label">处理结果说明（必填）</label>' +
+        '<textarea class="form-input" id="hResult" rows="2" placeholder="填写处理依据/说明"></textarea></div>' +
+        '<label class="checkbox-line" id="maliciousLine"><input type="checkbox" id="hMalicious">' +
+        '<span>标记为恶意举报（仅驳回时有效，扣举报人 10 信用分）</span></label>' +
+        '<div class="confirm-actions">' +
+        '<button class="btn btn-ghost" id="mCancel">取消</button>' +
+        '<button class="btn btn-primary" id="mOk">提交处理</button>' +
+        '</div>') +
+      '</div>';
+    document.body.appendChild(overlay);
+    function close() { overlay.remove(); }
+    overlay.querySelector('#mClose').onclick = close;
+    if (!readonly) {
+      overlay.querySelector('#mCancel').onclick = close;
+      overlay.onclick = function (e) { if (e.target === overlay) close(); };
+      /* 单选高亮 + 恶意举报仅驳回时显示 */
+      var radios = overlay.querySelectorAll('#statusGroup .radio-item');
+      radios.forEach(function (item) {
+        item.onclick = function () {
+          radios.forEach(function (x) { x.classList.remove('selected'); });
+          item.classList.add('selected');
+          var v = item.getAttribute('data-v');
+          document.getElementById('maliciousLine').style.display = (v === '4') ? 'flex' : 'none';
+        };
+      });
+      document.getElementById('maliciousLine').style.display = 'none';
+      overlay.querySelector('#mOk').onclick = async function () {
+        var checked = overlay.querySelector('#statusGroup input:checked');
+        if (!checked) { showToast('请选择处理方式'); return; }
+        var result = document.getElementById('hResult').value.trim();
+        if (!result) { showToast('请填写处理结果说明'); return; }
+        var isMalicious = document.getElementById('hMalicious').checked;
+        var btn2 = this;
+        btn2.disabled = true;
+        try {
+          await put('/admin/report/' + id + '/handle', {
+            status: parseInt(checked.value, 10),
+            handleResult: result,
+            isMalicious: isMalicious
+          });
+          showToast('举报已处理');
+          close();
+          loadReports();
+        } catch (e) { btn2.disabled = false; }
+      };
+    }
+  }).catch(function () {});
+}
+
+/* ---- 筛选 ---- */
+document.getElementById('searchBtn').onclick = function () {
+  status = document.getElementById('statusSelect').value;
+  pageNum = 1;
+  loadReports();
+};
+document.getElementById('statusSelect').onchange = document.getElementById('searchBtn').onclick;
+
+requireAdmin().then(function (ok) {
+  if (!ok) return;
+  loadReports();
+});
+</script>
+</body>
+</html>

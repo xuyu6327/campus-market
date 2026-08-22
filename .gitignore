@@ -1,0 +1,55 @@
+# ===== Java / Maven =====
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+*.pid
+.mvn/wrapper/maven-wrapper.jar
+
+# ===== IDE =====
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+
+# ===== 运行时数据 =====
+backend/uploads/
+uploads/
+*.tmp
+*.bak
+
+# ===== 系统文件 =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== 本地临时文件 =====
+test_*.sh
+q_*.sql
+fix_*.sql
+lsdir.js
+cp.txt
+add_home_btn.bat
+check_home.js
+fix_notif.js
+fix_notif_profile.js
+
+# ===== 内部文件（不对外发布）=====
+CLAUDE.md
+compile_check.bat
+restart_backend.bat
+vibecoding模拟面试.md
+前端优化方案.md
+项目优化方案.md
+文档审查报告-v1.0.md
+文档审查报告-v2.0.md
+校园二手交易平台-产品功能文档-v10.md
+校园二手交易平台-技术设计文档-v2.0.md
+.workbuddy/
+frontend/
+prototype/

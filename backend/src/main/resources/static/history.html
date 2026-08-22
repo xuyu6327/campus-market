@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>浏览记录 - 校园二手交易平台</title><link rel="stylesheet" href="common.css">
+<style>
+.history-page { background:var(--color-bg); min-height:100vh; padding-bottom:40px; }
+.goods-list { padding:var(--space-md); }
+.hist-item { display:flex; gap:var(--space-md); background:var(--color-surface); border-radius:var(--radius-md); padding:10px; margin-bottom:var(--space-sm); cursor:pointer; box-shadow:var(--shadow-sm); }
+.hist-item:active { background:var(--color-surface-alt); }
+.hist-img { width:76px; height:76px; border-radius:var(--radius-sm); background:var(--color-surface-alt); flex-shrink:0; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:24px; }
+.hist-img img { width:100%; height:100%; object-fit:cover; }
+.hist-info { flex:1; min-width:0; display:flex; flex-direction:column; justify-content:space-between; padding:2px 0; }
+.hist-title { font-size:var(--font-size-sm); font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.hist-price { font-size:var(--font-size-base); font-weight:700; color:var(--color-primary); }
+.hist-meta { font-size:var(--font-size-xs); color:var(--color-text-tertiary); }
+
+</style>
+</head>
+<body>
+<div class="history-page">
+  <div class="page-header"><span class="page-header-back" onclick="history.back()">←</span><span class="page-header-title">浏览记录</span><a class="page-header-home" href="index.html"><i class="icon" data-icon="home"></i></a></div>
+  <div class="goods-list" id="histList"><div class="loading" style="grid-column:1/-1">加载中...</div></div>
+</div>
+<div class="toast toast-global"></div>
+<script src="api.js"></script>
+<script src="icons.js"></script>
+<script>
+(function(){
+  if(!requireAuth())return;
+  var pageNum=1,hasMore=true,loading=false;
+  function load(reset){
+    if(loading||!hasMore)return;
+    loading=true;
+    if(reset)document.getElementById('histList').innerHTML='<div class="loading" style="grid-column:1/-1">加载中...</div>';
+    get('/goods/history',{pageNum:pageNum,pageSize:10})
+      .then(function(page){
+        loading=false;
+        var list=page.records||[];
+        var el=document.getElementById('histList');
+        if(reset){
+          if(list.length===0){el.innerHTML='<div class="empty-state" style="grid-column:1/-1"><i class="empty-icon" data-icon="clock"></i><p>暂无浏览记录</p></div>';return;}
+          el.innerHTML=list.map(function(g){return card(g);}).join('');
+        }else{list.forEach(function(g){el.innerHTML+=card(g);});}
+        hasMore=list.length>=10;pageNum++;
+        el.querySelectorAll('.hist-item').forEach(function(c){c.addEventListener('click',function(){window.location.href='detail.html?id='+this.dataset.id;});});
+      })
+      .catch(function(){loading=false;document.getElementById('histList').innerHTML='<div class="empty-state" style="grid-column:1/-1"><p>加载失败</p></div>';});
+  }
+  function card(g){
+    var img=g.coverImage?'<img src="'+g.coverImage+'" alt="">':'<i class="ph-icon" data-icon="camera"></i>';
+    return '<div class="hist-item" data-id="'+g.id+'"><div class="hist-img">'+img+'</div><div class="hist-info"><div class="hist-title">'+escapeHtml(g.title||'')+'</div><div class="hist-price">¥'+Number(g.price||0).toFixed(0)+'</div><div class="hist-meta">'+timeAgo(g.createTime)+'</div></div></div>';
+  }
+  window.addEventListener('scroll',function(){
+    if(loading||!hasMore)return;
+    var sh=document.documentElement.scrollHeight,st=window.scrollY||document.documentElement.scrollTop,ch=document.documentElement.clientHeight;
+    if(sh-st-ch<200)load();
+  });
+  load(true);
+  function escapeHtml(t){if(!t)return'';var d=document.createElement('div');d.appendChild(document.createTextNode(t));return d.innerHTML;}
+})();
+</script>
+</body>
+</html>

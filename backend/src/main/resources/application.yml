@@ -1,0 +1,112 @@
+# ============================================
+# 校园二手交易平台 - Spring Boot 配置
+# ============================================
+
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: dev
+
+  # 数据源配置（上线部署必须通过环境变量覆盖：DB_PASSWORD）
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/campus_market?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:123456}
+
+  # Redis 配置
+  redis:
+    host: localhost
+    port: 6379
+    database: 0
+    timeout: 3000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 4
+        min-idle: 0
+        max-wait: -1ms
+
+  # Jackson 配置
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    default-property-inclusion: non_null
+
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+
+# MyBatis-Plus 配置
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.campus.market.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      table-prefix: ""
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# JWT 配置（上线部署必须通过环境变量覆盖：JWT_SECRET）
+jwt:
+  secret: ${JWT_SECRET:campus-market-jwt-secret-key-2024-qlgd-campus-tech}
+  # token 有效期：7天（毫秒）
+  expiration: 604800000
+  # token 前缀
+  token-prefix: "Bearer "
+  # 请求头名称
+  header: Authorization
+
+# 业务配置
+campus:
+  market:
+    # 信用分配置
+    credit:
+      initial: 100          # 初始信用分
+      min: 0                # 最低信用分
+      max: 100              # 最高信用分
+      buyer-cancel: -3      # 买家取消预订扣分
+      seller-cancel: 0      # 卖家取消不扣分
+      trade-complete: 2     # 完成交易加分
+      good-review: 1        # 获得好评加分
+      bad-review: -2        # 获得差评扣分
+
+    # 订单配置
+    order:
+      timeout-minutes: 30       # 预订超时时间（分钟）
+      contact-fail-hours: 24    # "联系不上卖家"超时时间（小时）
+
+    # 商品配置
+    goods:
+      offline-days: 30          # 商品自动下架天数
+      max-images: 9             # 最大图片数量
+      description-max-length: 500
+
+    # 上传配置
+    upload:
+      path: ./uploads/
+      allowed-types: jpg,jpeg,png,gif,webp
+      max-size: 5242880         # 5MB
+
+    # 加密配置（上线部署必须通过环境变量覆盖：AES_KEY / HMAC_KEY）
+    # 注意：默认值仅用于本地开发，生产环境若不更换密钥，已加密的手机号可被任意持有代码者解密
+    crypto:
+      # AES-GCM 加密密钥（32字节Base64，用于手机号等敏感字段加密）
+      aes-key: ${AES_KEY:Y2FtcHVzLU1hcmtldC1BRVMtR0NNLUtleS0yMDI0ISE=}
+      # HMAC-SHA256 盲索引密钥（用于手机号等值查询，不泄露明文）
+      hmac-key: ${HMAC_KEY:campus-market-hmac-sha256-blind-index-key-2024}
+
+# Knife4j 配置
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn

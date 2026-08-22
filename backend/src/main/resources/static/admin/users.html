@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>用户管理 - 管理后台</title>
+<link rel="stylesheet" href="../common.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<div class="admin-page">
+  <div class="admin-page-header">
+    <div>
+      <h1>用户管理</h1>
+      <div class="sub">搜索、封禁/启用、重置密码、调整信用分（手机号为解密明文，仅管理员可见）</div>
+    </div>
+  </div>
+
+  <!-- 筛选 -->
+  <div class="filter-bar">
+    <input class="form-input filter-input" id="keywordInput" placeholder="昵称 / 学号 / 手机号">
+    <select class="filter-select" id="statusSelect">
+      <option value="">全部状态</option>
+      <option value="1">正常</option>
+      <option value="0">已禁用</option>
+    </select>
+    <select class="filter-select" id="roleSelect">
+      <option value="">全部角色</option>
+      <option value="0">普通用户</option>
+      <option value="1">管理员</option>
+    </select>
+    <button class="btn btn-primary btn-sm" id="searchBtn"><i class="icon" data-icon="search"></i>搜索</button>
+    <button class="btn btn-ghost btn-sm" id="resetBtn">重置</button>
+  </div>
+
+  <!-- 列表 -->
+  <div class="admin-card">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>用户</th>
+          <th>学号</th>
+          <th>手机号</th>
+          <th>信用分</th>
+          <th>角色</th>
+          <th>状态</th>
+          <th>注册时间</th>
+          <th style="min-width:230px">操作</th>
+        </tr>
+      </thead>
+      <tbody id="userBody">
+        <tr><td colspan="8"><div class="loading">加载中...</div></td></tr>
+      </tbody>
+    </table>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</div>
+
+<script src="../api.js"></script>
+<script src="../icons.js"></script>
+<script src="common.js"></script>
+<script>
+var pageNum = 1, pageSize = 10;
+var keyword = '', status = '', role = '';
+
+function loadUsers() {
+  document.getElementById('userBody').innerHTML = '<tr><td colspan="8"><div class="loading">加载中...</div></td></tr>';
+  var params = { pageNum: pageNum, pageSize: pageSize };
+  if (keyword) params.keyword = keyword;
+  if (status !== '') params.status = parseInt(status, 10);
+  if (role !== '') params.role = parseInt(role, 10);
+  get('/admin/user/list', params).then(function (page) {
+    page = page || {};
+    var list = page.records || [];
+    if (!list.length) {
+      document.getElementById('userBody').innerHTML = '<tr><td colspan="8"><div class="empty-wrap">暂无用户数据</div></td></tr>';
+    } else {
+      document.getElementById('userBody').innerHTML = list.map(renderRow).join('');
+    }
+    renderPagination('pagination', page, function (p) { pageNum = p; loadUsers(); });
+  }).catch(function () {
+    document.getElementById('userBody').innerHTML = '<tr><td colspan="8"><div class="empty-wrap">加载失败</div></td></tr>';
+  });
+}
+
+function renderRow(u) {
+  var avatar = u.avatar
+    ? '<img class="avatar-sm" src="' + escapeHtml(u.avatar) + '" alt="">'
+    : '<span class="avatar-sm"><i class="icon" data-icon="user"></i></span>';
+  var roleTag = u.role === 1 ? '<span class="tag tag-warning">管理员</span>' : '<span class="tag tag-secondary">用户</span>';
+  var statusTag = u.status === 1 ? '<span class="tag tag-success">正常</span>' : '<span class="tag tag-danger">已禁用</span>';
+  var credit = (u.creditScore === undefined || u.creditScore === null) ? '-' : u.creditScore;
+  var ops = renderOps(u);
+  return '<tr>' +
+    '<td>' + avatar + ' <span style="font-weight:600">' + escapeHtml(u.nickname || '-') + '</span></td>' +
+    '<td>' + escapeHtml(u.studentId || '-') + '</td>' +
+    '<td>' + escapeHtml(u.phone || '-') + '</td>' +
+    '<td><span class="tag ' + (credit < 10 ? 'tag-danger' : 'tag-info') + '">' + credit + '</span></td>' +
+    '<td>' + roleTag + '</td>' +
+    '<td>' + statusTag + '</td>' +
+    '<td class="cell-sub">' + escapeHtml((u.createTime || '').replace('T', ' ').slice(0, 19)) + '</td>' +
+    '<td>' + ops + '</td>' +
+    '</tr>';
+}
+
+function renderOps(u) {
+  var html = '<button class="op-btn" data-act="detail" data-id="' + u.id + '">详情</button>';
+  if (u.role !== 1) {
+    if (u.status === 1) {
+      html += '<button class="op-btn danger" data-act="ban" data-id="' + u.id + '">封禁</button>';
+    } else {
+      html += '<button class="op-btn success" data-act="enable" data-id="' + u.id + '">启用</button>';
+    }
+  }
+  html += '<button class="op-btn" data-act="reset" data-id="' + u.id + '">重置密码</button>';
+  html += '<button class="op-btn" data-act="credit" data-id="' + u.id + '">调整信用分</button>';
+  return html;
+}
+
+/* ---- 操作事件（事件委托） ---- */
+document.getElementById('userBody').onclick = function (e) {
+  var btn = e.target.closest('.op-btn');
+  if (!btn) return;
+  var act = btn.getAttribute('data-act');
+  var id = parseInt(btn.getAttribute('data-id'), 10);
+  if (act === 'detail') showDetail(id);
+  else if (act === 'ban') banUser(id, btn);
+  else if (act === 'enable') enableUser(id, btn);
+  else if (act === 'reset') resetPassword(id);
+  else if (act === 'credit') openCreditModal(id, btn);
+};
+
+/* ---- 详情 ---- */
+function showDetail(id) {
+  get('/admin/user/' + id).then(function (u) {
+    u = u || {};
+    var credit = (u.creditScore === undefined || u.creditScore === null) ? '-' : u.creditScore;
+    var html = '<div class="detail-grid">' +
+      '<div class="detail-item"><div class="k">昵称</div><div class="v">' + escapeHtml(u.nickname || '-') + '</div></div>' +
+      '<div class="detail-item"><div class="k">角色</div><div class="v">' + escapeHtml(u.roleDesc || (u.role === 1 ? '管理员' : '普通用户')) + '</div></div>' +
+      '<div class="detail-item"><div class="k">学号</div><div class="v">' + escapeHtml(u.studentId || '-') + '</div></div>' +
+      '<div class="detail-item"><div class="k">真实姓名</div><div class="v">' + escapeHtml(u.realName || '-') + '</div></div>' +
+      '<div class="detail-item"><div class="k">手机号（解密）</div><div class="v">' + escapeHtml(u.phone || '-') + '</div></div>' +
+      '<div class="detail-item"><div class="k">状态</div><div class="v">' + escapeHtml(u.statusDesc || (u.status === 1 ? '正常' : '已禁用')) + '</div></div>' +
+      '<div class="detail-item"><div class="k">QQ</div><div class="v">' + escapeHtml(u.qq || '-') + '</div></div>' +
+      '<div class="detail-item"><div class="k">微信</div><div class="v">' + escapeHtml(u.wechat || '-') + '</div></div>' +
+      '<div class="detail-item"><div class="k">信用分</div><div class="v">' + credit + '</div></div>' +
+      '<div class="detail-item"><div class="k">取消标记</div><div class="v">' + escapeHtml(u.cancelStatus === undefined || u.cancelStatus === null ? '-' : u.cancelStatus) + '</div></div>' +
+      '<div class="detail-item full"><div class="k">注册时间</div><div class="v">' + escapeHtml((u.createTime || '-').replace('T', ' ').slice(0, 19)) + '</div></div>' +
+      '<div class="detail-item full"><div class="k">最后更新</div><div class="v">' + escapeHtml((u.updateTime || '-').replace('T', ' ').slice(0, 19)) + '</div></div>' +
+      '</div>';
+    alertDialog('用户详情', html);
+  }).catch(function () {});
+}
+
+/* ---- 封禁 ---- */
+async function banUser(id, btn) {
+  var ok = await confirmDialog('确认封禁', '封禁后该用户将无法登录，其发布中的商品将下架，进行中订单买家会收到通知。确定封禁吗？');
+  if (!ok) return;
+  try {
+    await put('/admin/user/' + id + '/ban');
+    showToast('已封禁该用户');
+    loadUsers();
+  } catch (e) {}
+}
+
+/* ---- 启用 ---- */
+async function enableUser(id, btn) {
+  var ok = await confirmDialog('确认启用', '启用该用户账号。注意：信用分低于 10 的冻结账户无法启用（需先调整信用分）。');
+  if (!ok) return;
+  try {
+    await put('/admin/user/' + id + '/enable');
+    showToast('已启用该用户');
+    loadUsers();
+  } catch (e) {}
+}
+
+/* ---- 重置密码 ---- */
+async function resetPassword(id) {
+  var ok = await confirmDialog('重置密码', '将密码重置为统一初始密码 admin123，确定吗？');
+  if (!ok) return;
+  try {
+    await put('/admin/user/' + id + '/reset-password');
+    showToast('已重置为 admin123');
+  } catch (e) {}
+}
+
+/* ---- 调整信用分 ---- */
+function openCreditModal(id, btn) {
+  var row = btn.closest('tr');
+  var current = row ? (row.querySelectorAll('td')[3].textContent.trim()) : '-';
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay show';
+  overlay.innerHTML =
+    '<div class="modal-content">' +
+    '<div class="modal-header"><span>调整信用分</span><button class="modal-close" id="mClose">&times;</button></div>' +
+    '<div class="form-group"><label class="form-label">当前信用分</label>' +
+    '<input class="form-input" id="mCurrent" value="' + escapeHtml(current) + '" disabled></div>' +
+    '<div class="form-group"><label class="form-label">变更值（可正可负）</label>' +
+    '<input class="form-input" id="mChange" type="number" placeholder="如 -10 / +5"></div>' +
+    '<div class="form-group"><label class="form-label">变更原因（必填）</label>' +
+    '<input class="form-input" id="mReason" placeholder="如：违规发布商品"></div>' +
+    '<div class="form-hint">加分到 10 分以上可自动解冻；扣分到 10 分以下将自动冻结账号。</div>' +
+    '<div class="confirm-actions" style="margin-top:16px">' +
+    '<button class="btn btn-ghost" id="mCancel">取消</button>' +
+    '<button class="btn btn-primary" id="mOk">确认调整</button>' +
+    '</div></div>';
+  document.body.appendChild(overlay);
+  function close() { overlay.remove(); }
+  overlay.querySelector('#mClose').onclick = close;
+  overlay.querySelector('#mCancel').onclick = close;
+  overlay.onclick = function (e) { if (e.target === overlay) close(); };
+  overlay.querySelector('#mOk').onclick = async function () {
+    var change = document.getElementById('mChange').value;
+    var reason = document.getElementById('mReason').value.trim();
+    if (change === '' || isNaN(Number(change))) { showToast('请输入有效的变更值'); return; }
+    if (!reason) { showToast('请填写变更原因'); return; }
+    var btn2 = this;
+    btn2.disabled = true;
+    try {
+      await put('/admin/user/' + id + '/credit', { changeValue: Number(change), reason: reason });
+      showToast('信用分已调整');
+      close();
+      loadUsers();
+    } catch (e) { btn2.disabled = false; }
+  };
+}
+
+/* ---- 筛选事件 ---- */
+function doSearch() {
+  keyword = document.getElementById('keywordInput').value.trim();
+  status = document.getElementById('statusSelect').value;
+  role = document.getElementById('roleSelect').value;
+  pageNum = 1;
+  loadUsers();
+}
+document.getElementById('searchBtn').onclick = doSearch;
+document.getElementById('keywordInput').onkeydown = function (e) { if (e.key === 'Enter') doSearch(); };
+document.getElementById('resetBtn').onclick = function () {
+  document.getElementById('keywordInput').value = '';
+  document.getElementById('statusSelect').value = '';
+  document.getElementById('roleSelect').value = '';
+  doSearch();
+};
+
+requireAdmin().then(function (ok) {
+  if (!ok) return;
+  loadUsers();
+});
+</script>
+</body>
+</html>

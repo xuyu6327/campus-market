@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>前端三套方案预览</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Nunito','PingFang SC','Microsoft YaHei',sans-serif; background:#1a1a2e; color:#fff; padding:40px 20px; min-height:100vh; }
+h1 { text-align:center; font-size:24px; margin-bottom:8px; }
+.sub { text-align:center; color:#9ca3af; font-size:13px; margin-bottom:32px; }
+.compare { display:flex; gap:28px; justify-content:center; flex-wrap:wrap; }
+.plan { width:340px; }
+.plan-title { text-align:center; padding:12px; border-radius:12px 12px 0 0; font-weight:800; font-size:15px; }
+.plan-desc { text-align:center; font-size:12px; padding:8px; color:#9ca3af; background:#2a2a4a; margin-bottom:16px; border-radius:0 0 12px 12px; }
+.phone { border-radius:24px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.5); }
+
+/* ============ 方案A：暖橙治愈 ============ */
+.plan-a .plan-title { background:#FF6B35; color:#fff; }
+.plan-a .phone { background:#FFF9F5; }
+.pa-header { background:rgba(255,255,255,0.85); backdrop-filter:blur(10px); padding:12px 14px; display:flex; align-items:center; gap:10px; }
+.pa-logo { font-weight:800; color:#FF6B35; font-size:14px; }
+.pa-search { flex:1; background:#FFF0EB; border-radius:20px; padding:8px 14px; font-size:12px; color:#c4b5a0; }
+.pa-cats { display:flex; gap:8px; padding:10px 14px; overflow:hidden; }
+.pa-cat { font-size:11px; padding:4px 12px; border-radius:20px; background:#fff; color:#8a7a6a; font-weight:600; white-space:nowrap; }
+.pa-cat.active { background:#FF6B35; color:#fff; }
+.pa-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:4px 14px 14px; }
+.pa-card { background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 2px 8px rgba(255,107,53,0.08), 0 8px 24px rgba(255,107,53,0.05); }
+.pa-img { height:90px; background:linear-gradient(135deg,#FFD23F,#FF6B35); display:flex; align-items:center; justify-content:center; font-size:28px; }
+.pa-img.b2 { background:linear-gradient(135deg,#2EC4B6,#3B82F6); }
+.pa-img.b3 { background:linear-gradient(135deg,#FFB627,#EF4444); }
+.pa-body { padding:8px 10px; }
+.pa-price { color:#FF6B35; font-weight:800; font-size:14px; }
+.pa-title { font-size:11px; color:#1a1a2e; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pa-meta { font-size:9px; color:#b0a090; margin-top:4px; }
+.pa-tab { display:flex; background:#fff; border-top:1px solid #f0e6e0; padding:8px 0; justify-content:space-around; }
+.pa-tab-item { text-align:center; font-size:9px; color:#9c8a78; }
+.pa-tab-item.on { color:#FF6B35; }
+.pa-tab-item .i { font-size:16px; display:block; margin-bottom:2px; }
+.pa-pub { width:44px; height:44px; background:linear-gradient(135deg,#FF6B35,#FF8F5E); border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:22px; margin-top:-12px; box-shadow:0 4px 12px rgba(255,107,53,0.4); }
+
+/* ============ 方案B：清新果冻 ============ */
+.plan-b .plan-title { background:linear-gradient(135deg,#FF6B6B,#4ECDC4); color:#fff; }
+.plan-b .phone { background:#FFFAF5; }
+.pb-header { background:#fff; padding:12px 14px; display:flex; align-items:center; gap:10px; border-bottom:2px solid #FFE6E6; }
+.pb-logo { font-weight:800; font-size:14px; background:linear-gradient(135deg,#FF6B6B,#4ECDC4); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.pb-search { flex:1; background:#FFF3F3; border-radius:16px; padding:8px 14px; font-size:12px; color:#d0b0b0; border:1px solid #FFE0E0; }
+.pb-cats { display:flex; gap:6px; padding:10px 14px; overflow:hidden; }
+.pb-cat { font-size:11px; padding:5px 12px; border-radius:12px; background:#FFE6E6; color:#FF6B6B; font-weight:700; white-space:nowrap; box-shadow:inset 0 -2px 0 rgba(0,0,0,0.05); }
+.pb-cat.active { background:linear-gradient(135deg,#FF6B6B,#FF8E8E); color:#fff; }
+.pb-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:4px 14px 14px; }
+.pb-card { background:#fff; border-radius:20px; overflow:hidden; box-shadow:inset 0 -3px 0 #FFE6E6, 0 4px 12px rgba(255,107,107,0.12); }
+.pb-img { height:90px; background:linear-gradient(135deg,#FFE66D,#FF6B6B); display:flex; align-items:center; justify-content:center; font-size:28px; }
+.pb-img.b2 { background:linear-gradient(135deg,#4ECDC4,#7FDBDA); }
+.pb-img.b3 { background:linear-gradient(135deg,#FFB627,#FF8E53); }
+.pb-body { padding:9px 11px; }
+.pb-price { color:#FF6B6B; font-weight:800; font-size:14px; }
+.pb-title { font-size:11px; color:#3d3d3d; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
+.pb-meta { font-size:9px; color:#c0a0a0; margin-top:4px; }
+.pb-tab { display:flex; background:#fff; border-top:2px solid #FFE6E6; padding:8px 0; justify-content:space-around; }
+.pb-tab-item { text-align:center; font-size:9px; color:#d0a0a0; font-weight:600; }
+.pb-tab-item.on { color:#FF6B6B; }
+.pb-tab-item .i { font-size:16px; display:block; margin-bottom:2px; }
+.pb-pub { width:44px; height:44px; background:linear-gradient(135deg,#FF6B6B,#FF8E8E); border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:22px; margin-top:-12px; box-shadow:0 4px 12px rgba(255,107,107,0.35); }
+
+/* ============ 方案C：现代轻奢 ============ */
+.plan-c .plan-title { background:#111111; color:#fff; }
+.plan-c .phone { background:#F7F7F8; }
+.pc-header { background:rgba(255,255,255,0.92); backdrop-filter:blur(12px); padding:14px 16px; display:flex; align-items:center; gap:10px; border-bottom:1px solid #EEEEEE; }
+.pc-logo { font-weight:800; font-size:15px; color:#111; letter-spacing:-0.5px; }
+.pc-logo span { color:#FF6B35; }
+.pc-search { flex:1; background:#F2F2F3; border-radius:24px; padding:9px 16px; font-size:12px; color:#999; }
+.pc-cats { display:flex; gap:12px; padding:14px 16px; overflow:hidden; }
+.pc-cat { font-size:12px; padding:4px 0; color:#666; font-weight:600; white-space:nowrap; border-bottom:2px solid transparent; }
+.pc-cat.active { color:#FF6B35; border-bottom-color:#FF6B35; }
+.pc-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; padding:8px 16px 16px; }
+.pc-card { background:#fff; border-radius:16px; overflow:hidden; border:1px solid #F0F0F0; box-shadow:0 1px 4px rgba(0,0,0,0.04); transition:box-shadow 0.2s; }
+.pc-img { height:90px; background:linear-gradient(135deg,#EEEEEE,#E0E0E0); display:flex; align-items:center; justify-content:center; font-size:30px; }
+.pc-img.b2 { background:linear-gradient(135deg,#FF6B35,#FF9A6B); }
+.pc-img.b3 { background:linear-gradient(135deg,#2EC4B6,#7FDBDA); }
+.pc-body { padding:10px 12px; }
+.pc-price { color:#FF6B35; font-weight:800; font-size:15px; }
+.pc-price small { font-size:10px; }
+.pc-title { font-size:12px; color:#111; margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; line-height:1.4; }
+.pc-meta { font-size:10px; color:#999; margin-top:6px; display:flex; justify-content:space-between; }
+.pc-tag { font-size:9px; background:#FFF0EB; color:#FF6B35; padding:1px 6px; border-radius:6px; font-weight:600; }
+.pc-tab { display:flex; background:rgba(255,255,255,0.95); backdrop-filter:blur(12px); border-top:1px solid #EEEEEE; padding:10px 0 12px; justify-content:space-around; }
+.pc-tab-item { text-align:center; font-size:10px; color:#999; }
+.pc-tab-item.on { color:#FF6B35; }
+.pc-tab-item .i { font-size:18px; display:block; margin-bottom:3px; }
+.pc-pub { width:46px; height:46px; background:#FF6B35; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:24px; margin-top:-14px; box-shadow:0 6px 16px rgba(255,107,53,0.35); }
+
+/* 页脚 */
+.footer { text-align:center; color:#9ca3af; font-size:12px; margin-top:40px; line-height:1.8; }
+.footer b { color:#ddd; }
+</style>
+</head>
+<body>
+
+<h1>校园二手交易平台 — 三套前端方案预览</h1>
+<div class="sub">三套方案基于同一套假数据渲染，对比配色 / 圆角 / 阴影 / 图标 / 布局差异</div>
+
+<div class="compare">
+
+  <!-- 方案A -->
+  <div class="plan plan-a">
+    <div class="plan-title">方案 A · 暖橙治愈</div>
+    <div class="plan-desc">现有橙色的精致化升级 · 奶油渐变 · 大圆角柔和阴影 · 改动最小</div>
+    <div class="phone">
+      <div class="pa-header"><div class="pa-logo">♻️ 校园二手</div><div class="pa-search">搜索你想要的闲置...</div></div>
+      <div class="pa-cats">
+        <span class="pa-cat active">全部</span><span class="pa-cat">📚 教材</span><span class="pa-cat">💻 数码</span><span class="pa-cat">🏠 生活</span><span class="pa-cat">👟 服饰</span>
+      </div>
+      <div class="pa-grid">
+        <div class="pa-card"><div class="pa-img">📱</div><div class="pa-body"><div class="pa-price">¥899</div><div class="pa-title">九成新 iPhone 12 128G</div><div class="pa-meta">一食堂 · 3小时前</div></div></div>
+        <div class="pa-card"><div class="pa-img b2">📚</div><div class="pa-body"><div class="pa-price">¥25</div><div class="pa-title">考研数学复习全书</div><div class="pa-meta">图书馆 · 昨天</div></div></div>
+        <div class="pa-card"><div class="pa-img b3">🎧</div><div class="pa-body"><div class="pa-price">¥120</div><div class="pa-title">索尼降噪耳机 99新</div><div class="pa-meta">二食堂 · 2天前</div></div></div>
+        <div class="pa-card"><div class="pa-img">🛋️</div><div class="pa-body"><div class="pa-price">¥60</div><div class="pa-title">宿舍小台灯 暖光可调</div><div class="pa-meta">五号宿舍 · 4天前</div></div></div>
+      </div>
+      <div class="pa-tab">
+        <div class="pa-tab-item on"><span class="i">🏠</span>首页</div>
+        <div class="pa-tab-item"><span class="i">📝</span>发布</div>
+        <div class="pa-tab-item"><span class="i">💬</span>消息</div>
+        <div class="pa-tab-item"><span class="i">👤</span>我的</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 方案B -->
+  <div class="plan plan-b">
+    <div class="plan-title">方案 B · 清新果冻</div>
+    <div class="plan-desc">糖果色校园活泼风 · 超圆角果冻质感 · 亲切感最强</div>
+    <div class="phone">
+      <div class="pb-header"><div class="pb-logo">♻️ 校园二手</div><div class="pb-search">搜点啥呢...</div></div>
+      <div class="pb-cats">
+        <span class="pb-cat active">全部</span><span class="pb-cat">📚 教材</span><span class="pb-cat">💻 数码</span><span class="pb-cat">🏠 生活</span>
+      </div>
+      <div class="pb-grid">
+        <div class="pb-card"><div class="pb-img">📱</div><div class="pb-body"><div class="pb-price">¥899</div><div class="pb-title">九成新 iPhone 12</div><div class="pb-meta">一食堂 · 3小时前</div></div></div>
+        <div class="pb-card"><div class="pb-img b2">📚</div><div class="pb-body"><div class="pb-price">¥25</div><div class="pb-title">考研数学复习全书</div><div class="pb-meta">图书馆 · 昨天</div></div></div>
+        <div class="pb-card"><div class="pb-img b3">🎧</div><div class="pb-body"><div class="pb-price">¥120</div><div class="pb-title">索尼降噪耳机</div><div class="pb-meta">二食堂 · 2天前</div></div></div>
+        <div class="pb-card"><div class="pb-img">🛋️</div><div class="pb-body"><div class="pb-price">¥60</div><div class="pb-title">宿舍小台灯</div><div class="pb-meta">五号宿舍 · 4天前</div></div></div>
+      </div>
+      <div class="pb-tab">
+        <div class="pb-tab-item on"><span class="i">🏠</span>首页</div>
+        <div class="pb-tab-item"><span class="i">📝</span>发布</div>
+        <div class="pb-tab-item"><span class="i">💬</span>消息</div>
+        <div class="pb-tab-item"><span class="i">👤</span>我的</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 方案C -->
+  <div class="plan plan-c">
+    <div class="plan-title">方案 C · 现代轻奢</div>
+    <div class="plan-desc">闲鱼式白底克制橙 · 大留白细边框 · 高级感最强</div>
+    <div class="phone">
+      <div class="pc-header"><div class="pc-logo">校园<span>二手</span></div><div class="pc-search">搜索你想要的闲置...</div></div>
+      <div class="pc-cats">
+        <span class="pc-cat active">全部</span><span class="pc-cat">教材</span><span class="pc-cat">数码</span><span class="pc-cat">生活</span><span class="pc-cat">服饰</span>
+      </div>
+      <div class="pc-grid">
+        <div class="pc-card"><div class="pc-img">📱</div><div class="pc-body"><div class="pc-price"><small>¥</small>899</div><div class="pc-title">九成新 iPhone 12 128G 国行</div><div class="pc-meta"><span>一食堂 · 3小时</span><span class="pc-tag">99新</span></div></div></div>
+        <div class="pc-card"><div class="pc-img b2">📚</div><div class="pc-body"><div class="pc-price"><small>¥</small>25</div><div class="pc-title">考研数学复习全书 2025</div><div class="pc-meta"><span>图书馆 · 昨天</span><span class="pc-tag">9成新</span></div></div></div>
+        <div class="pc-card"><div class="pc-img b3">🎧</div><div class="pc-body"><div class="pc-price"><small>¥</small>120</div><div class="pc-title">索尼降噪耳机 WH-1000</div><div class="pc-meta"><span>二食堂 · 2天</span><span class="pc-tag">99新</span></div></div></div>
+        <div class="pc-card"><div class="pc-img">🛋️</div><div class="pc-body"><div class="pc-price"><small>¥</small>60</div><div class="pc-title">宿舍暖光小台灯 可调光</div><div class="pc-meta"><span>五号宿舍 · 4天</span><span class="pc-tag">8成新</span></div></div></div>
+      </div>
+      <div class="pc-tab">
+        <div class="pc-tab-item on"><span class="i">🏠</span>首页</div>
+        <div class="pc-tab-item"><span class="i">＋</span>发布</div>
+        <div class="pc-tab-item"><span class="i">💬</span>消息</div>
+        <div class="pc-tab-item"><span class="i">👤</span>我的</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <b>打开方式：</b>直接双击打开本文件，或访问 <b>http://localhost:8080/frontend-preview.html</b><br>
+  三套方案的差异点：背景色 / 卡片圆角与阴影 / 主色用法 / 分类tab样式 / 信息密度
+</div>
+
+</body>
+</html>
