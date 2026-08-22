@@ -1,3 +1,6 @@
 {
-  "navigationBarTitleText": "聊天"
+  "navigationBarTitleText": "聊天",
+  "usingComponents": {
+    "icon": "/components/icon/icon"
+  }
 }

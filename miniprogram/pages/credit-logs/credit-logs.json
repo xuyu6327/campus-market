@@ -1,3 +1,6 @@
 {
-  "navigationBarTitleText": "信用分记录"
+  "navigationBarTitleText": "信用分记录",
+  "usingComponents": {
+    "icon": "/components/icon/icon"
+  }
 }

@@ -28,7 +28,7 @@
       data-related="{{item.relatedId}}"
       bindtap="onNotifTap"
     >
-      <view class="notif-icon">{{item.typeIcon}}</view>
+      <view class="notif-icon"><icon name="{{item.typeIcon}}" size="44" color="#6B7280"/></view>
       <view class="notif-body flex-1">
         <view class="notif-title {{item.isRead === 0 ? 'unread' : ''}}">{{item.title}}</view>
         <view class="notif-content text-ellipsis" wx:if="{{item.content}}">{{item.content}}</view>
@@ -37,7 +37,7 @@
     </view>
 
     <view wx:if="{{!loading && notifications.length === 0}}" class="empty-state">
-      <view class="empty-icon">🔔</view>
+      <view class="empty-icon"><icon name="bell" size="96" color="#9CA3AF"/></view>
       <text>暂无通知</text>
     </view>
     <view class="load-more" wx:if="{{notifications.length > 0}}">{{loadMoreText}}</view>
@@ -63,7 +63,7 @@
     </view>
 
     <view wx:if="{{!convLoading && conversations.length === 0}}" class="empty-state">
-      <view class="empty-icon">💬</view>
+      <view class="empty-icon"><icon name="message" size="96" color="#9CA3AF"/></view>
       <text>暂无会话</text>
       <view class="sub">在商品详情页点击「私聊卖家」发起聊天</view>
     </view>

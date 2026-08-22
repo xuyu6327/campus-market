@@ -4,7 +4,7 @@ const util = require('../../utils/util');
 
 // 通知图标映射（type 1-7，与后端一致）
 const TYPE_ICONS = {
-  1: '📩', 2: '⏰', 3: '🎉', 4: '⭐', 5: '📞', 6: '🔔', 7: '📢'
+  1: 'message', 2: 'clock', 3: 'clock', 4: 'phone', 5: 'star', 6: 'bell', 7: 'flag'
 };
 
 Page({
@@ -91,7 +91,7 @@ Page({
       .then((page) => {
         const records = (page && page.records) || [];
         const list = records.map((n) => Object.assign({}, n, {
-          typeIcon: TYPE_ICONS[n.type] || '📢',
+          typeIcon: TYPE_ICONS[n.type] || 'bell',
           timeAgo: util.timeAgo(n.createTime)
         }));
         const notifications = reset ? list : this.data.notifications.concat(list);
