@@ -1,0 +1,36 @@
+/* 订单管理 */
+@import "../common.wxss";
+
+.order-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 24rpx 28rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(26, 26, 46, 0.05);
+}
+.order-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  padding-bottom: 16rpx;
+  border-bottom: 2rpx solid var(--color-border);
+}
+.order-no { font-size: 22rpx; color: var(--color-text-tertiary); max-width: 420rpx; }
+.order-body { display: flex; gap: 20rpx; padding-top: 16rpx; }
+.order-img {
+  width: 110rpx;
+  height: 110rpx;
+  border-radius: 14rpx;
+  background: var(--color-surface-alt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.order-img image { width: 100%; height: 100%; }
+.img-ph { font-size: 40rpx; opacity: 0.25; }
+.order-title { font-size: 28rpx; font-weight: 700; }
+.order-price { font-size: 28rpx; font-weight: 700; color: var(--color-primary); margin-top: 4rpx; }
+.order-sub { font-size: 22rpx; color: var(--color-text-tertiary); margin-top: 4rpx; }

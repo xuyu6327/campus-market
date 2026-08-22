@@ -4,7 +4,7 @@
     <view class="goods-card" wx:for="{{goodsList}}" wx:key="id" data-id="{{item.id}}" bindtap="goDetail">
       <view class="goods-card-img">
         <image wx:if="{{item.coverImage}}" src="{{item.coverImage}}" mode="aspectFill" />
-        <view wx:else class="img-ph"><icon name="image" size="48" color="#6B7280"/></view>
+        <view wx:else class="img-ph"><svg-icon name="image" size="48" color="#6B7280"/></view>
       </view>
       <view class="goods-card-body flex-1">
         <view class="goods-card-title text-clamp-2">{{item.title}}</view>
@@ -21,7 +21,7 @@
   </view>
 
   <view wx:if="{{!loading && goodsList.length === 0}}" class="empty-state">
-    <view class="empty-icon"><icon name="heart" size="96" color="#9CA3AF"/></view>
+    <view class="empty-icon"><svg-icon name="heart" size="96" color="#9CA3AF"/></view>
     <text>暂无收藏，去逛逛吧</text>
   </view>
   <view class="load-more" wx:if="{{goodsList.length > 0}}">{{loadMoreText}}</view>

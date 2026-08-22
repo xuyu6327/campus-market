@@ -1,5 +1,5 @@
 /* 发布商品 */
-.publish-page { padding-bottom: 160rpx; }
+.publish-page { padding-bottom: 300rpx; }
 .form-section {
   background: #fff;
   margin-bottom: 16rpx;
@@ -84,7 +84,7 @@
 
 .submit-bar {
   position: fixed;
-  left: 0; right: 0; bottom: 0;
+  left: 0; right: 0; bottom: 120rpx;
   padding: 16rpx 32rpx calc(env(safe-area-inset-bottom) + 16rpx);
   background: #fff;
   border-top: 2rpx solid var(--color-border);

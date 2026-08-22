@@ -1,5 +1,5 @@
 /* 我的 */
-.profile-page { padding-bottom: 60rpx; }
+.profile-page { padding-bottom: 260rpx; }
 
 .profile-header {
   background: linear-gradient(135deg, var(--color-primary), #FF8F5E);
@@ -52,6 +52,21 @@
 .credit-title { font-size: 30rpx; font-weight: 700; }
 .credit-desc { font-size: 22rpx; color: var(--color-text-tertiary); margin-top: 4rpx; }
 .credit-arrow { color: var(--color-text-tertiary); font-size: 36rpx; }
+
+/* 管理员入口（对照 Web 端 admin-entry：黄色警示条） */
+.admin-entry {
+  margin: 0 32rpx 24rpx;
+  padding: 28rpx 32rpx;
+  background: #FEF3C7;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #F59E0B;
+}
+.admin-entry .arrow { font-size: 32rpx; }
 
 /* 菜单 */
 .menu-section {

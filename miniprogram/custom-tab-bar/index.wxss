@@ -1,0 +1,84 @@
+/* 自定义底部导航（颜色全部写死，不依赖 CSS 变量——组件样式隔离环境下 var() 可能解析失败） */
+.tab-bar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+  padding: 12rpx 0 calc(env(safe-area-inset-bottom) + 12rpx);
+  background: #FFFFFF;
+  border-top: 2rpx solid #F0E6E0;
+  z-index: 999;
+}
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+  min-width: 100rpx;
+  padding: 4rpx 10rpx;
+}
+.tab-icon-wrap { position: relative; }
+.tab-label {
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #9CA3AF;
+}
+.tab-label.active { color: #FF6B35; }
+.tab-badge {
+  position: absolute;
+  top: -10rpx;
+  right: -24rpx;
+  min-width: 32rpx;
+  height: 32rpx;
+  padding: 0 8rpx;
+  border-radius: 999rpx;
+  background: #EF4444;
+  color: #fff;
+  font-size: 18rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+/* 居中发布按钮 */
+.tab-item.special { min-width: 120rpx; }
+.special-btn {
+  position: relative;
+  width: 104rpx;
+  height: 104rpx;
+  border-radius: 50%;
+  /* 渐变 + 纯色兜底：即使渐变不支持，也有橙色底 */
+  background-color: #FF6B35;
+  background: linear-gradient(135deg, #FF6B35, #FF8F5E);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -44rpx;
+  box-shadow: 0 8rpx 32rpx rgba(255, 107, 53, 0.45);
+}
+/* 加号：两根白色圆角矩形交叉（CSS 绘制，任何环境必显示） */
+.plus-h {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 44rpx;
+  height: 8rpx;
+  border-radius: 4rpx;
+  background: #FFFFFF;
+}
+.plus-v {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 8rpx;
+  height: 44rpx;
+  border-radius: 4rpx;
+  background: #FFFFFF;
+}
+.special .tab-label { color: #9CA3AF; }

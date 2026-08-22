@@ -1,0 +1,1 @@
+<image wx:if="{{src}}" class="svg-icon-img" src="{{src}}" mode="aspectFit" style="width:{{size}}rpx;height:{{size}}rpx;" />

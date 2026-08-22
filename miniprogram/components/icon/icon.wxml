@@ -1,1 +1,0 @@
-<view class="icon" style="width:{{size}}rpx;height:{{size}}rpx;background-color:{{color}};-webkit-mask-image:{{mask}};mask-image:{{mask}};"></view>

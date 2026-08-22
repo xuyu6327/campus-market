@@ -28,7 +28,10 @@ Page({
   onShow() {
     if (!request.isLoggedIn()) {
       util.redirectToLogin();
+      return;
     }
+    const tabBar = this.getTabBar && this.getTabBar();
+    if (tabBar) tabBar.sync(2, getApp().globalData.unreadTotal);
   },
 
   onLoad(options) {

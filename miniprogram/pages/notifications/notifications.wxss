@@ -1,5 +1,5 @@
 /* 消息 */
-.notif-page { padding-bottom: 40rpx; }
+.notif-page { padding-bottom: 200rpx; }
 .notif-header {
   display: flex;
   align-items: center;

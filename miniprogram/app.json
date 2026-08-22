@@ -15,7 +15,13 @@
     "pages/credit-logs/credit-logs",
     "pages/user-profile/user-profile",
     "pages/report/report",
-    "pages/chat-detail/chat-detail"
+    "pages/chat-detail/chat-detail",
+    "pages/admin/admin",
+    "pages/admin/users/users",
+    "pages/admin/goods/goods",
+    "pages/admin/orders/orders",
+    "pages/admin/reports/reports",
+    "pages/admin/categories/categories"
   ],
   "window": {
     "navigationBarBackgroundColor": "#FF6B35",
@@ -25,6 +31,7 @@
     "backgroundTextStyle": "dark"
   },
   "tabBar": {
+    "custom": true,
     "color": "#9CA3AF",
     "selectedColor": "#FF6B35",
     "backgroundColor": "#FFFFFF",

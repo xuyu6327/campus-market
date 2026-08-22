@@ -1,5 +1,5 @@
 /* 首页 */
-.index-page { padding-bottom: 40rpx; }
+.index-page { padding-bottom: 200rpx; }
 
 /* 搜索栏 */
 .search-bar {
@@ -51,11 +51,16 @@
 }
 .cat-item {
   flex-shrink: 0;
-  padding: 10rpx 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 64rpx;
+  padding: 0 28rpx;
   border-radius: 999rpx;
   font-size: 26rpx;
   font-weight: 600;
   color: var(--color-text-secondary);
+  box-sizing: border-box;
 }
 .cat-item.active { background: var(--color-primary); color: #fff; }
 

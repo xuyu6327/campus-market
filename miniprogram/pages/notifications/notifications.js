@@ -32,6 +32,11 @@ Page({
       return;
     }
     this.loadBadges();
+    // 同步自定义 tabBar 选中态与角标
+    getApp().refreshUnread().then((total) => {
+      const tabBar = this.getTabBar && this.getTabBar();
+      if (tabBar) tabBar.sync(1, total);
+    });
     if (this.data.tab === 'notice') {
       this.reloadNotifications();
     } else {
