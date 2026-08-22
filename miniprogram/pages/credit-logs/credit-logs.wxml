@@ -17,7 +17,7 @@
   </view>
 
   <view wx:if="{{!loading && logs.length === 0}}" class="empty-state">
-    <view class="empty-icon">📈</view>
+    <view class="empty-icon"><icon name="chart" size="96" color="#9CA3AF"/></view>
     <text>暂无信用分变更记录</text>
   </view>
   <view class="load-more" wx:if="{{logs.length > 0}}">{{loadMoreText}}</view>

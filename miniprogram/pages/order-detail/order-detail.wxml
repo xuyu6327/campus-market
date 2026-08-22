@@ -3,7 +3,7 @@
 
   <!-- 状态 -->
   <view class="od-status">
-    <view class="od-status-icon">{{statusIcon}}</view>
+    <view class="od-status-icon"><icon name="{{statusIcon}}" size="64" color="#FF6B35"/></view>
     <view class="od-status-info">
       <view class="od-status-title">{{order.statusName}}</view>
       <view class="od-status-peer">{{peerRole}}：{{peerName}}</view>
@@ -16,7 +16,7 @@
   <view class="od-section goods-section" data-id="{{order.goodsId}}" bindtap="goGoods">
     <view class="od-goods-img">
       <image wx:if="{{goodsCoverImage}}" src="{{goodsCoverImage}}" mode="aspectFill" />
-      <view wx:else class="img-ph">📦</view>
+      <view wx:else class="img-ph"><icon name="image" size="48" color="#6B7280"/></view>
     </view>
     <view class="od-goods-info flex-1">
       <view class="od-goods-title text-ellipsis">{{order.goodsTitle || '商品'}}</view>
@@ -90,6 +90,6 @@
 </view>
 
 <view wx:else class="empty-state">
-  <view class="empty-icon">📋</view>
+  <view class="empty-icon"><icon name="doc" size="96" color="#9CA3AF"/></view>
   <text>{{loadError || '加载中...'}}</text>
 </view>

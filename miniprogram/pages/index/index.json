@@ -1,3 +1,6 @@
 {
-  "navigationBarTitleText": "校园二手"
+  "navigationBarTitleText": "校园二手",
+  "usingComponents": {
+    "icon": "/components/icon/icon"
+  }
 }

@@ -1,3 +1,6 @@
 {
-  "navigationBarTitleText": "用户主页"
+  "navigationBarTitleText": "用户主页",
+  "usingComponents": {
+    "icon": "/components/icon/icon"
+  }
 }

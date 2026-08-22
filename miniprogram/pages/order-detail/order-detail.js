@@ -2,7 +2,7 @@
 const request = require('../../utils/request');
 const util = require('../../utils/util');
 
-const STATUS_ICONS = { 0: '⏰', 1: '⭐', 2: '✕', 3: '✕', 4: '⏰' };
+const STATUS_ICONS = { 0: 'clock', 1: 'star', 2: 'close', 3: 'close', 4: 'clock' };
 
 Page({
   data: {
@@ -12,7 +12,7 @@ Page({
     goodsCoverImage: '',
     peerRole: '',
     peerName: '',
-    statusIcon: '⏰',
+    statusIcon: 'clock',
     createTimeText: '',
     tradeTimeText: '',
     showActions: false,
@@ -43,7 +43,7 @@ Page({
           goodsCoverImage: util.resolveUrl(o.goodsCoverImage),
           peerRole,
           peerName,
-          statusIcon: STATUS_ICONS[o.status] || '📋',
+          statusIcon: STATUS_ICONS[o.status] || 'doc',
           createTimeText: util.formatDateTime(o.createTime),
           tradeTimeText: util.formatDateTime(o.tradeTime),
           showActions

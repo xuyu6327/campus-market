@@ -14,7 +14,7 @@
       <image src="{{item}}" mode="aspectFill" />
     </swiper-item>
   </swiper>
-  <view wx:else class="carousel empty-carousel">📷</view>
+  <view wx:else class="carousel empty-carousel"><icon name="image" size="120" color="#9CA3AF"/></view>
 
   <!-- 卖家冻结提示 -->
   <view class="frozen-bar" wx:if="{{detail.sellerStatus === 0}}">该卖家账号已被冻结，请注意交易安全，建议暂停交易</view>
@@ -80,7 +80,7 @@
   <!-- 底部操作栏 -->
   <view class="bottom-bar">
     <view class="btn-fav" bindtap="toggleFavorite">
-      <text class="heart {{detail.favorited ? 'liked' : ''}}">{{detail.favorited ? '♥' : '♡'}}</text>
+      <icon name="heart" size="44" color="{{detail.favorited ? '#EF4444' : '#9CA3AF'}}"/>
       <text class="fav-count">{{detail.favoriteCount || 0}}</text>
     </view>
     <view class="btn-chat" wx:if="{{!detail.isOwner && !isGuest}}" bindtap="startChat">私聊</view>
