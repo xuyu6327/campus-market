@@ -1,5 +1,5 @@
 /* ============================================================
-  校园二手交易平台 — 线性 SVG 图标库
+  温故 — 线性 SVG 图标库
   风格：24x24 viewBox，1.6px 描边，currentColor 填充，线性现代感
   用法：<i class="icon" data-icon="home"></i>
   页面加载后由 renderIcons() 自动替换为 SVG

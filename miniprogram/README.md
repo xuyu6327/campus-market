@@ -1,4 +1,4 @@
-# 校园二手交易平台 - 微信小程序（miniprogram/）
+# 温故 - 微信小程序（miniprogram/）
 
 > 原生小程序（WXML/WXSS/JS，无 uni-app），复用 Web 版后端全部接口，接口契约以后端 Controller 层源码为准。
 > 设计规范：主色 #FF6B35、辅色 #2EC4B6、背景 #FFF9F5（rpx 适配，见 app.wxss）。

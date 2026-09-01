@@ -29,6 +29,11 @@ public interface AdminService {
      */
     AdminDashboardVO getDashboard();
 
+    /**
+     * 仪表盘图表聚合数据（趋势/分布/排行榜）
+     */
+    java.util.Map<String, Object> getDashboardCharts();
+
     // ================== 用户管理 ==================
 
     /**
@@ -133,4 +138,21 @@ public interface AdminService {
      * 启用/禁用分类
      */
     void toggleCategoryStatus(Long id, Integer status);
+
+    // ================== 敏感词管理 ==================
+
+    /**
+     * 敏感词列表（分页）
+     */
+    Page<com.campus.market.entity.SensitiveWord> getSensitiveList(Integer pageNum, Integer pageSize);
+
+    /**
+     * 新增敏感词（自动刷新 DFA 词库）
+     */
+    Long addSensitiveWord(String word, String category);
+
+    /**
+     * 删除敏感词（自动刷新 DFA 词库）
+     */
+    void deleteSensitiveWord(Long id);
 }

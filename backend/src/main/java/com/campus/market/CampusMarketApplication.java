@@ -7,7 +7,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
- * 校园二手交易平台 - 启动类
+ * 温故（校园闲置交易平台） - 启动类
  *
  * @SpringBootApplication  Spring Boot 自动配置入口
  * @MapperScan             扫描 Mapper 接口所在包，MyBatis-Plus 自动生成实现类
@@ -24,7 +24,7 @@ public class CampusMarketApplication {
         String port = context.getEnvironment().getProperty("server.port", "8080");
         System.out.println("\n" +
                 "========================================\n" +
-                "  校园二手交易平台 启动成功!\n" +
+                "  温故（校园闲置交易平台） 启动成功!\n" +
                 "  Web 端:   http://localhost:" + port + "/\n" +
                 "  API 文档: http://localhost:" + port + "/doc.html\n" +
                 "========================================\n");

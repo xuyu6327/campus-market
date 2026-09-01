@@ -3,7 +3,7 @@
   <!-- 渐变标题 -->
   <view class="admin-hero">
     <view class="hero-title">后台管理</view>
-    <view class="hero-sub">校园二手交易平台 · 数据总览</view>
+    <view class="hero-sub">温故 · 数据总览</view>
   </view>
 
   <!-- 统计卡片 -->

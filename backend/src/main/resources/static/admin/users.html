@@ -14,6 +14,7 @@
       <h1>用户管理</h1>
       <div class="sub">搜索、封禁/启用、重置密码、调整信用分（手机号为解密明文，仅管理员可见）</div>
     </div>
+    <button class="btn btn-ghost btn-sm" id="exportBtn"><i class="icon" data-icon="doc"></i>导出CSV</button>
   </div>
 
   <!-- 筛选 -->
@@ -62,6 +63,28 @@
 <script>
 var pageNum = 1, pageSize = 10;
 var keyword = '', status = '', role = '';
+
+/* --- 导出 CSV（含当前筛选条件） --- */
+function exportUsers() {
+  var params = { pageNum: 1, pageSize: 1000 };
+  if (keyword) params.keyword = keyword;
+  if (status !== '') params.status = parseInt(status, 10);
+  if (role !== '') params.role = parseInt(role, 10);
+  get('/admin/user/list', params).then(function (page) {
+    var list = (page && page.records) || [];
+    var rows = list.map(function (u) {
+      return [
+        u.id, u.nickname, u.phone, u.studentId, u.realName, u.qq, u.wechat,
+        u.creditScore, u.roleDesc || (u.role == 1 ? '管理员' : '用户'), u.statusDesc,
+        (u.createTime || '').replace('T', ' ').slice(0, 19)
+      ];
+    });
+    exportCSV('用户列表_' + new Date().toISOString().slice(0, 10) + '.csv',
+      ['ID', '昵称', '手机号', '学号', '真实姓名', 'QQ', '微信', '信用分', '角色', '状态', '注册时间'], rows);
+    showToast('已导出 ' + list.length + ' 条');
+  }).catch(function () {});
+}
+document.getElementById('exportBtn').onclick = exportUsers;
 
 function loadUsers() {
   document.getElementById('userBody').innerHTML = '<tr><td colspan="8"><div class="loading">加载中...</div></td></tr>';

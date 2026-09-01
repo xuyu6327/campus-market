@@ -6,6 +6,39 @@
 <title>仪表盘 - 管理后台</title>
 <link rel="stylesheet" href="../common.css">
 <link rel="stylesheet" href="admin.css">
+<style>
+/* ---- 图表区 ---- */
+.chart-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px; }
+.chart-grid .full { grid-column:1/-1; }
+.chart-card { background:var(--color-surface); border-radius:var(--radius-md); box-shadow:var(--shadow-sm); padding:16px 20px; }
+.chart-card .card-title { margin-bottom:12px; }
+.chart-box { width:100%; height:280px; }
+.chart-box.tall { height:320px; }
+.chart-box.short { height:240px; }
+@media (max-width:768px) { .chart-grid { grid-template-columns:1fr; } }
+
+/* ---- 地点分布示意图 ---- */
+.loc-map { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; padding:8px 0; }
+.loc-zone { border:1.5px dashed var(--color-border); border-radius:var(--radius-md); padding:18px 12px; text-align:center; position:relative; min-height:110px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; transition:all .2s; }
+.loc-zone:hover { border-color:var(--color-primary); background:var(--color-primary-light); }
+.loc-zone .zone-name { font-size:var(--font-size-sm); font-weight:700; color:var(--color-text-secondary); }
+.loc-zone .zone-count { font-size:26px; font-weight:800; color:var(--color-primary); }
+.loc-zone .zone-sub { font-size:var(--font-size-xs); color:var(--color-text-tertiary); }
+.loc-zone .zone-dot { position:absolute; top:8px; right:10px; width:8px; height:8px; border-radius:50%; background:var(--color-primary); opacity:.5; }
+@media (max-width:768px) { .loc-map { grid-template-columns:repeat(2, 1fr); } }
+
+/* ---- 排行榜 ---- */
+.rank-list { list-style:none; }
+.rank-item { display:flex; align-items:center; gap:12px; padding:10px 4px; border-bottom:1px solid var(--color-border); font-size:var(--font-size-sm); }
+.rank-item:last-child { border-bottom:none; }
+.rank-no { width:22px; height:22px; border-radius:6px; background:var(--color-surface-alt); color:var(--color-text-secondary); font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.rank-item:nth-child(1) .rank-no { background:var(--color-primary); color:#fff; }
+.rank-item:nth-child(2) .rank-no { background:var(--color-secondary); color:#fff; }
+.rank-item:nth-child(3) .rank-no { background:var(--color-warning, #F59E0B); color:#fff; }
+.rank-name { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.rank-val { font-weight:700; color:var(--color-primary); }
+.rank-sub { font-size:var(--font-size-xs); color:var(--color-text-tertiary); }
+</style>
 </head>
 <body>
 <div class="admin-page">
@@ -30,10 +63,59 @@
       </div>
     </div>
   </div>
+
+  <!-- 图表区 -->
+  <div class="chart-grid" id="chartGrid" style="display:none">
+    <div class="chart-card full">
+      <div class="card-title">近30天 注册 / 发布趋势</div>
+      <div class="chart-box" id="trendChart"></div>
+    </div>
+    <div class="chart-card full">
+      <div class="card-title">近30天 完成交易趋势</div>
+      <div class="chart-box short" id="tradeChart"></div>
+    </div>
+    <div class="chart-card">
+      <div class="card-title">商品分类分布</div>
+      <div class="chart-box short" id="categoryChart"></div>
+    </div>
+    <div class="chart-card">
+      <div class="card-title">商品状态分布</div>
+      <div class="chart-box short" id="statusChart"></div>
+    </div>
+    <div class="chart-card">
+      <div class="card-title">成色分布</div>
+      <div class="chart-box short" id="conditionChart"></div>
+    </div>
+    <div class="chart-card">
+      <div class="card-title">热门商品 TOP10（按浏览量）</div>
+      <div class="chart-box short" id="topGoodsChart"></div>
+    </div>
+    <div class="chart-card">
+      <div class="card-title">信用分分布</div>
+      <div class="chart-box short" id="creditChart"></div>
+    </div>
+    <div class="chart-card">
+      <div class="card-title">评价分布</div>
+      <div class="chart-box short" id="scoreChart"></div>
+    </div>
+    <div class="chart-card">
+      <div class="card-title">订单转化漏斗</div>
+      <div class="chart-box short" id="funnelChart"></div>
+    </div>
+    <div class="chart-card full">
+      <div class="card-title">交易地点分布</div>
+      <div class="loc-map" id="locMap"></div>
+    </div>
+    <div class="chart-card full">
+      <div class="card-title">活跃用户 TOP10（按发布商品数）</div>
+      <ul class="rank-list" id="topUsersList"></ul>
+    </div>
+  </div>
 </div>
 
 <script src="../api.js"></script>
 <script src="../icons.js"></script>
+<script src="vendor/echarts.min.js"></script>
 <script src="common.js"></script>
 <script>
 /* GET /admin/dashboard → AdminDashboardVO 11 个指标 */
@@ -50,6 +132,8 @@ var CARDS = [
   { key: 'pendingOrders',       label: '进行中订单',    icon: 'clock', color: '#2EC4B6' },
   { key: 'pendingReports',      label: '待处理举报',    icon: 'flag',  color: '#EF4444' }
 ];
+var STATUS_MAP = { 0: '已下架', 1: '在售', 2: '预订中', 3: '已售出' };
+var charts = {};
 
 function loadDashboard() {
   get('/admin/dashboard').then(function (data) {
@@ -78,12 +162,198 @@ function loadDashboard() {
   }).catch(function () {});
 }
 
-document.getElementById('refreshBtn').onclick = loadDashboard;
+/* ==================== 图表 ==================== */
+function disposeCharts() {
+  Object.keys(charts).forEach(function (k) { if (charts[k]) charts[k].dispose(); });
+  charts = {};
+}
+function emptyChart(elId, msg) {
+  var el = document.getElementById(elId);
+  el.innerHTML = '<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--color-text-tertiary);font-size:var(--font-size-sm)">' + (msg || '暂无数据') + '</div>';
+}
+function getChart(elId) {
+  var el = document.getElementById(elId);
+  if (!el) return null;
+  if (charts[elId]) return charts[elId];
+  var c = echarts.init(el);
+  charts[elId] = c;
+  return c;
+}
+function trendOption(dates, register, publish) {
+  return {
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['新增用户', '新增商品'], top: 0 },
+    grid: { left: 40, right: 20, top: 36, bottom: 28 },
+    xAxis: { type: 'category', data: dates, axisLabel: { fontSize: 10, interval: 2 } },
+    yAxis: { type: 'value', minInterval: 1 },
+    series: [
+      { name: '新增用户', type: 'line', smooth: true, data: register, itemStyle: { color: '#3B82F6' }, areaStyle: { opacity: 0.08 } },
+      { name: '新增商品', type: 'line', smooth: true, data: publish, itemStyle: { color: '#FF6B35' }, areaStyle: { opacity: 0.08 } }
+    ]
+  };
+}
+function barOption(dates, counts, color) {
+  return {
+    tooltip: { trigger: 'axis' },
+    grid: { left: 40, right: 20, top: 20, bottom: 28 },
+    xAxis: { type: 'category', data: dates, axisLabel: { fontSize: 10, interval: 2 } },
+    yAxis: { type: 'value', minInterval: 1 },
+    series: [{ type: 'bar', data: counts, itemStyle: { color: color || '#2EC4B6', borderRadius: [4, 4, 0, 0] }, barMaxWidth: 22 }]
+  };
+}
+function pieOption(data) {
+  return {
+    tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+    legend: { orient: 'vertical', right: 8, top: 'center', textStyle: { fontSize: 11 } },
+    series: [{ type: 'pie', radius: ['38%', '68%'], center: ['40%', '50%'], data: data, label: { show: false }, itemStyle: { borderRadius: 4 } }]
+  };
+}
+function barHOption(names, values, color) {
+  return {
+    tooltip: { trigger: 'axis' },
+    grid: { left: 70, right: 30, top: 10, bottom: 24 },
+    xAxis: { type: 'value', minInterval: 1 },
+    yAxis: { type: 'category', data: names, axisLabel: { fontSize: 10 } },
+    series: [{ type: 'bar', data: values, itemStyle: { color: color || '#FF6B35', borderRadius: [0, 4, 4, 0] }, barMaxWidth: 16 }]
+  };
+}
+
+/* 交易地点 → 校园分区 */
+function mapZone(name) {
+  var n = name || '';
+  if (/餐|食堂|饭/.test(n)) return '食堂区';
+  if (/宿|号楼|宿舍/.test(n)) return '宿舍区';
+  if (/教|学楼|图书馆/.test(n)) return '教学区';
+  if (/门|门口/.test(n)) return '校门区';
+  if (/操|运动|体育馆/.test(n)) return '运动区';
+  if (/超|便利店|商店/.test(n)) return '商业区';
+  return '其他';
+}
+
+function loadCharts() {
+  document.getElementById('chartGrid').style.display = 'grid';
+  disposeCharts();
+  get('/admin/dashboard/charts').then(function (d) {
+    d = d || {};
+    /* 趋势：合并日期轴 */
+    var dateMap = {};
+    function merge(list, key) {
+      (list || []).forEach(function (r) {
+        if (r && r.date) { dateMap[r.date] = dateMap[r.date] || { reg: 0, pub: 0, trade: 0 }; }
+      });
+      return dateMap;
+    }
+    merge(d.registerTrend); merge(d.publishTrend); merge(d.tradeTrend);
+    var dates = Object.keys(dateMap).sort();
+    var reg = dates.map(function (x) { return 0; });
+    var pub = dates.map(function (x) { return 0; });
+    var trade = dates.map(function (x) { return 0; });
+    var idx = {};
+    dates.forEach(function (x, i) { idx[x] = i; });
+    (d.registerTrend || []).forEach(function (r) { if (r && idx[r.date] !== undefined) reg[idx[r.date]] = r.count; });
+    (d.publishTrend || []).forEach(function (r) { if (r && idx[r.date] !== undefined) pub[idx[r.date]] = r.count; });
+    (d.tradeTrend || []).forEach(function (r) { if (r && idx[r.date] !== undefined) trade[idx[r.date]] = r.count; });
+
+    if (dates.length) {
+      getChart('trendChart').setOption(trendOption(dates, reg, pub));
+      getChart('tradeChart').setOption(barOption(dates, trade, '#10B981'));
+    } else {
+      emptyChart('trendChart'); emptyChart('tradeChart');
+    }
+
+    /* 分类饼图 */
+    var cats = (d.categoryDist || []).map(function (r) { return { name: r.name || '未分类', value: Number(r.count) || 0 }; }).filter(function (x) { return x.value > 0; });
+    if (cats.length) getChart('categoryChart').setOption(pieOption(cats)); else emptyChart('categoryChart');
+
+    /* 状态环形 */
+    var sts = (d.statusDist || []).map(function (r) { return { name: STATUS_MAP[r.name] || ('状态' + r.name), value: Number(r.count) || 0 }; }).filter(function (x) { return x.value > 0; });
+    if (sts.length) getChart('statusChart').setOption(pieOption(sts)); else emptyChart('statusChart');
+
+    /* 成色条形 */
+    var conds = (d.conditionDist || []).map(function (r) { return { name: CONDITION_MAP[r.name] || ('成色' + r.name), value: Number(r.count) || 0 }; }).filter(function (x) { return x.value > 0; });
+    if (conds.length) {
+      getChart('conditionChart').setOption(barHOption(conds.map(function (x) { return x.name; }), conds.map(function (x) { return x.value; }), '#8B5CF6'));
+    } else emptyChart('conditionChart');
+
+    /* 热门商品 TOP10 */
+    var tops = (d.topGoods || []).filter(function (r) { return r; });
+    if (tops.length) {
+      var names = tops.map(function (r) { return (r.title || '').length > 10 ? (r.title).slice(0, 10) + '…' : (r.title || '商品' + r.id); });
+      var vals = tops.map(function (r) { return Number(r.viewCount) || 0; });
+      getChart('topGoodsChart').setOption(barHOption(names, vals, '#FF6B35'));
+    } else emptyChart('topGoodsChart');
+
+    /* 交易地点分布（校园分区示意图） */
+    var zoneCount = {};
+    (d.locationDist || []).forEach(function (r) {
+      var z = mapZone(r.name);
+      zoneCount[z] = (zoneCount[z] || 0) + (Number(r.count) || 0);
+    });
+    var zones = ['食堂区', '宿舍区', '教学区', '校门区', '运动区', '商业区', '其他'];
+    var total = 0; zones.forEach(function (z) { total += (zoneCount[z] || 0); });
+    var locHtml = '';
+    zones.forEach(function (z) {
+      var c = zoneCount[z] || 0;
+      var pct = total ? Math.round(c / total * 100) : 0;
+      locHtml += '<div class="loc-zone"><span class="zone-dot"></span><div class="zone-name">' + z + '</div><div class="zone-count">' + c + '</div><div class="zone-sub">' + (pct ? pct + '%' : '暂无') + '</div></div>';
+    });
+    document.getElementById('locMap').innerHTML = locHtml;
+
+    /* 活跃用户 TOP10 */
+    var users = (d.topUsers || []).filter(function (r) { return r; });
+    if (users.length) {
+      document.getElementById('topUsersList').innerHTML = users.map(function (r, i) {
+        return '<li class="rank-item"><span class="rank-no">' + (i + 1) + '</span><span class="rank-name">' + escapeHtml(r.nickname || ('用户' + r.userId)) + '</span><span class="rank-val">' + (Number(r.count) || 0) + '</span><span class="rank-sub">件商品</span></li>';
+      }).join('');
+    } else {
+      document.getElementById('topUsersList').innerHTML = '<li class="rank-item" style="color:var(--color-text-tertiary)">暂无数据</li>';
+    }
+
+    /* 信用分分布 */
+    var credits = (d.creditDist || []).map(function (r) { return { name: r.name, value: Number(r.count) || 0 }; }).filter(function (x) { return x.value > 0; });
+    if (credits.length) {
+      getChart('creditChart').setOption(barHOption(credits.map(function (x) { return x.name; }), credits.map(function (x) { return x.value; }), '#EF4444'));
+    } else emptyChart('creditChart');
+
+    /* 评价分布 */
+    var scores = (d.scoreDist || []).map(function (r) { return { name: r.name, value: Number(r.count) || 0 }; }).filter(function (x) { return x.value > 0; });
+    if (scores.length) getChart('scoreChart').setOption(pieOption(scores)); else emptyChart('scoreChart');
+
+    /* 订单转化漏斗 */
+    var funnel = d.funnel || {};
+    var fTotal = Number(funnel.total) || 0;
+    if (fTotal > 0) {
+      var fDone = Number(funnel.done) || 0;
+      var fReviewed = Number(funnel.reviewed) || 0;
+      getChart('funnelChart').setOption({
+        tooltip: { trigger: 'item', formatter: '{b}: {c}' },
+        series: [{
+          type: 'funnel', left: '8%', right: '14%', top: 10, bottom: 10,
+          minSize: '20%', maxSize: '100%', gap: 4,
+          label: { show: true, position: 'inside', formatter: '{b}\n{c} 单', fontSize: 12 },
+          itemStyle: { borderColor: '#fff', borderWidth: 1 },
+          data: [
+            { name: '总预订', value: fTotal, itemStyle: { color: '#FF6B35' } },
+            { name: '完成交易', value: fDone, itemStyle: { color: '#2EC4B6' } },
+            { name: '已评价', value: fReviewed, itemStyle: { color: '#10B981' } }
+          ]
+        }]
+      });
+    } else emptyChart('funnelChart');
+  }).catch(function () {});
+}
+
+window.addEventListener('resize', function () {
+  Object.keys(charts).forEach(function (k) { if (charts[k]) charts[k].resize(); });
+});
+
+document.getElementById('refreshBtn').onclick = function () { loadDashboard(); loadCharts(); };
 document.getElementById('goReportsBtn').onclick = function () { goPage('reports.html'); };
 
 requireAdmin().then(function (ok) {
   if (!ok) return;
   loadDashboard();
+  loadCharts();
 });
 </script>
 </body>

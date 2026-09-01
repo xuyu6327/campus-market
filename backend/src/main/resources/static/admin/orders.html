@@ -14,6 +14,7 @@
       <h1>订单管理</h1>
       <div class="sub">查看订单信息（含买家解密联系方式）与交易状态</div>
     </div>
+    <button class="btn btn-ghost btn-sm" id="exportBtn"><i class="icon" data-icon="doc"></i>导出CSV</button>
   </div>
 
   <!-- 筛选 -->
@@ -68,6 +69,30 @@ var ORDER_STATUS = {
 
 var pageNum = 1, pageSize = 10;
 var keyword = '', status = '';
+
+/* --- 导出 CSV（含当前筛选条件） --- */
+function exportOrders() {
+  var params = { pageNum: 1, pageSize: 1000 };
+  if (keyword) params.keyword = keyword;
+  if (status !== '') params.status = parseInt(status, 10);
+  get('/admin/order/list', params).then(function (page) {
+    var list = (page && page.records) || [];
+    var rows = list.map(function (o) {
+      var st = ORDER_STATUS[o.status];
+      return [
+        o.id, o.orderNo, o.goodsTitle, o.buyerNickname, o.sellerNickname,
+        o.buyerPhone, o.goodsPrice,
+        st ? st.text : o.status,
+        (o.tradeTime || '').replace('T', ' ').slice(0, 19),
+        (o.createTime || '').replace('T', ' ').slice(0, 19)
+      ];
+    });
+    exportCSV('订单列表_' + new Date().toISOString().slice(0, 10) + '.csv',
+      ['ID', '订单号', '商品', '买家', '卖家', '买家电话', '金额', '状态', '完成时间', '预订时间'], rows);
+    showToast('已导出 ' + list.length + ' 条');
+  }).catch(function () {});
+}
+document.getElementById('exportBtn').onclick = exportOrders;
 
 function loadOrders() {
   document.getElementById('orderBody').innerHTML = '<tr><td colspan="8"><div class="loading">加载中...</div></td></tr>';

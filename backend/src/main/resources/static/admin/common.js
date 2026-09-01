@@ -116,6 +116,25 @@ function alertDialog(title, contentHtml) {
   overlay.onclick = function (e) { if (e.target === overlay) close(); };
 }
 
+/* --- 导出 CSV（headers: 表头数组, rows: 二维数组） --- */
+function exportCSV(filename, headers, rows) {
+  var csv = '\ufeff' + headers.map(function (h) { return '"' + String(h).replace(/"/g, '""') + '"'; }).join(',') + '\n' +
+    rows.map(function (r) {
+      return r.map(function (cell) {
+        var s = String(cell === undefined || cell === null ? '' : cell);
+        return '"' + s.replace(/"/g, '""') + '"';
+      }).join(',');
+    }).join('\n');
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
 /* --- 分页渲染：page = {records,total,size,current,pages} --- */
 function renderPagination(containerId, page, onChange) {
   var el = document.getElementById(containerId);

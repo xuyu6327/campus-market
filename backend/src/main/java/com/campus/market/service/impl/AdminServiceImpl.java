@@ -23,7 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -54,6 +56,12 @@ public class AdminServiceImpl implements AdminService {
     private ReportMapper reportMapper;
     @Autowired
     private NotificationMapper notificationMapper;
+    @Autowired
+    private EvaluationMapper evaluationMapper;
+    @Autowired
+    private SensitiveWordMapper sensitiveWordMapper;
+    @Autowired
+    private com.campus.market.service.SensitiveWordService sensitiveWordService;
     @Autowired
     private CryptoUtils cryptoUtils;
     @Autowired
@@ -145,6 +153,33 @@ public class AdminServiceImpl implements AdminService {
 
         log.info("[仪表盘] 管理员={} 查看统计数据", JwtInterceptor.getCurrentUserId());
         return vo;
+    }
+
+    @Override
+    public Map<String, Object> getDashboardCharts() {
+        JwtInterceptor.requireAdmin();
+
+        Map<String, Object> result = new HashMap<>();
+        // 趋势（近30天）
+        result.put("registerTrend", sysUserMapper.selectRegisterTrend());
+        result.put("publishTrend", goodsInfoMapper.selectPublishTrend());
+        result.put("tradeTrend", tradeOrderMapper.selectTradeTrend());
+        // 分布
+        result.put("categoryDist", goodsInfoMapper.selectCategoryDist());
+        result.put("statusDist", goodsInfoMapper.selectStatusDist());
+        result.put("conditionDist", goodsInfoMapper.selectConditionDist());
+        // 排行榜
+        result.put("topGoods", goodsInfoMapper.selectTopGoods());
+        result.put("topUsers", goodsInfoMapper.selectTopUsers());
+        // 交易地点分布
+        result.put("locationDist", goodsInfoMapper.selectLocationDist());
+        // 信用分/评价/转化漏斗
+        result.put("creditDist", sysUserMapper.selectCreditDist());
+        result.put("scoreDist", evaluationMapper.selectScoreDist());
+        Map<String, Object> funnel = tradeOrderMapper.selectOrderFunnel();
+        if (funnel == null) funnel = new HashMap<>();
+        result.put("funnel", funnel);
+        return result;
     }
 
     // ============================================================
@@ -801,6 +836,58 @@ public class AdminServiceImpl implements AdminService {
         );
 
         log.info("[切换分类状态] admin={}, categoryId={}, status={}", adminId, id, status);
+    }
+
+    // ============================================================
+    // 7. 敏感词管理
+    // ============================================================
+
+    @Override
+    public Page<SensitiveWord> getSensitiveList(Integer pageNum, Integer pageSize) {
+        JwtInterceptor.requireAdmin();
+        Page<SensitiveWord> page = PageUtil.of(pageNum, pageSize);
+        return sensitiveWordMapper.selectPage(page,
+                new LambdaQueryWrapper<SensitiveWord>()
+                        .orderByDesc(SensitiveWord::getId));
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long addSensitiveWord(String word, String category) {
+        JwtInterceptor.requireAdmin();
+        if (word == null || word.trim().isEmpty()) {
+            throw new BizException(400, "敏感词不能为空");
+        }
+        String w = word.trim();
+        Long exist = sensitiveWordMapper.selectCount(
+                new LambdaQueryWrapper<SensitiveWord>().eq(SensitiveWord::getWord, w)
+        );
+        if (exist > 0) {
+            throw new BizException(400, "该敏感词已存在");
+        }
+        SensitiveWord sw = new SensitiveWord();
+        sw.setWord(w);
+        sw.setCategory(category != null && !category.trim().isEmpty() ? category.trim() : "自定义");
+        sw.setStatus(1);
+        sensitiveWordMapper.insert(sw);
+        // 刷新 DFA 词库（新增立即生效）
+        sensitiveWordService.refresh();
+        log.info("[新增敏感词] admin={}, word={}", JwtInterceptor.getCurrentUserId(), w);
+        return sw.getId();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteSensitiveWord(Long id) {
+        JwtInterceptor.requireAdmin();
+        SensitiveWord sw = sensitiveWordMapper.selectById(id);
+        if (sw == null) {
+            throw new BizException(404, "敏感词不存在");
+        }
+        sensitiveWordMapper.deleteById(id);
+        // 刷新 DFA 词库（删除立即生效）
+        sensitiveWordService.refresh();
+        log.info("[删除敏感词] admin={}, word={}", JwtInterceptor.getCurrentUserId(), sw.getWord());
     }
 
     // ============================================================

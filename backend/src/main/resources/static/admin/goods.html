@@ -14,6 +14,7 @@
       <h1>商品管理</h1>
       <div class="sub">搜索商品、查看详情（含解密联系方式）、强制下架违规商品</div>
     </div>
+    <button class="btn btn-ghost btn-sm" id="exportBtn"><i class="icon" data-icon="doc"></i>导出CSV</button>
   </div>
 
   <!-- 筛选 -->
@@ -69,6 +70,29 @@ var GOODS_STATUS = {
 
 var pageNum = 1, pageSize = 10;
 var keyword = '', status = '';
+
+/* --- 导出 CSV（含当前筛选条件） --- */
+function exportGoods() {
+  var params = { pageNum: 1, pageSize: 1000 };
+  if (keyword) params.keyword = keyword;
+  if (status !== '') params.status = parseInt(status, 10);
+  get('/admin/goods/list', params).then(function (page) {
+    var list = (page && page.records) || [];
+    var rows = list.map(function (g) {
+      var st = GOODS_STATUS[g.status];
+      return [
+        g.id, g.title, g.categoryName, g.price, g.originalPrice,
+        CONDITION_DESCS[g.goodsCondition] || g.conditionDesc,
+        st ? st.text : g.status, g.sellerNickname, g.viewCount, g.favoriteCount,
+        g.tradeLocation, (g.createTime || '').replace('T', ' ').slice(0, 19)
+      ];
+    });
+    exportCSV('商品列表_' + new Date().toISOString().slice(0, 10) + '.csv',
+      ['ID', '标题', '分类', '价格', '原价', '成色', '状态', '卖家', '浏览量', '收藏数', '交易地点', '发布时间'], rows);
+    showToast('已导出 ' + list.length + ' 条');
+  }).catch(function () {});
+}
+document.getElementById('exportBtn').onclick = exportGoods;
 
 function loadGoods() {
   document.getElementById('goodsBody').innerHTML = '<tr><td colspan="8"><div class="loading">加载中...</div></td></tr>';

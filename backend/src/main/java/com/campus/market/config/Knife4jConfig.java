@@ -17,7 +17,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @OpenAPIDefinition(
         info = @Info(
-                title = "校园二手交易平台",
+                title = "温故（校园闲置交易平台）",
+                description = "温故 - 校园闲置交易平台 REST API 文档",
                 version = "1.0.0"
         )
 )

@@ -44,6 +44,12 @@ public class AdminController {
         return Result.success(vo);
     }
 
+    @GetMapping("/dashboard/charts")
+    @Operation(summary = "仪表盘图表数据", description = "趋势/分布/排行榜聚合数据（ECharts 图表用）")
+    public Result<java.util.Map<String, Object>> getDashboardCharts() {
+        return Result.success(adminService.getDashboardCharts());
+    }
+
     // ================== 2. 用户管理 ==================
 
     @GetMapping("/user/list")
@@ -190,5 +196,28 @@ public class AdminController {
     public Result<Void> toggleCategoryStatus(@PathVariable Long id, @RequestParam Integer status) {
         adminService.toggleCategoryStatus(id, status);
         return Result.success("状态切换成功", null);
+    }
+
+    // ================== 敏感词管理 ==================
+
+    @GetMapping("/sensitive/list")
+    @Operation(summary = "敏感词列表", description = "分页获取敏感词")
+    public Result<Page<com.campus.market.entity.SensitiveWord>> getSensitiveList(
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        return Result.success(adminService.getSensitiveList(pageNum, pageSize));
+    }
+
+    @PostMapping("/sensitive")
+    @Operation(summary = "新增敏感词", description = "新增后立即刷新 DFA 词库")
+    public Result<Long> addSensitiveWord(@RequestParam String word, @RequestParam(required = false) String category) {
+        return Result.success(adminService.addSensitiveWord(word, category));
+    }
+
+    @DeleteMapping("/sensitive/{id}")
+    @Operation(summary = "删除敏感词", description = "删除后立即刷新 DFA 词库")
+    public Result<Void> deleteSensitiveWord(@PathVariable Long id) {
+        adminService.deleteSensitiveWord(id);
+        return Result.success("删除成功", null);
     }
 }

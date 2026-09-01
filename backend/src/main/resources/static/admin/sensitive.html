@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>敏感词管理 - 管理后台</title>
+<link rel="stylesheet" href="../common.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<div class="admin-page">
+  <div class="admin-page-header">
+    <div>
+      <h1>敏感词管理</h1>
+      <div class="sub">维护违禁词库，新增/删除后立即生效（DFA 词库自动刷新）</div>
+    </div>
+    <button class="btn btn-primary btn-sm" id="addBtn"><i class="icon" data-icon="add"></i>新增敏感词</button>
+  </div>
+
+  <!-- 列表 -->
+  <div class="admin-card">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>敏感词</th>
+          <th>分类</th>
+          <th>状态</th>
+          <th>创建时间</th>
+          <th style="min-width:90px">操作</th>
+        </tr>
+      </thead>
+      <tbody id="swBody">
+        <tr><td colspan="6"><div class="loading">加载中...</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="../api.js"></script>
+<script src="../icons.js"></script>
+<script src="common.js"></script>
+<script>
+function loadList() {
+  document.getElementById('swBody').innerHTML = '<tr><td colspan="6"><div class="loading">加载中...</div></td></tr>';
+  get('/admin/sensitive/list', { pageNum: 1, pageSize: 100 }).then(function (data) {
+    var list = toList(data);
+    if (!list.length) {
+      document.getElementById('swBody').innerHTML = '<tr><td colspan="6"><div class="empty-wrap">暂无敏感词</div></td></tr>';
+    } else {
+      document.getElementById('swBody').innerHTML = list.map(function (w) {
+        return '<tr>' +
+          '<td class="cell-sub">' + w.id + '</td>' +
+          '<td><span style="font-weight:600">' + escapeHtml(w.word) + '</span></td>' +
+          '<td class="cell-sub">' + escapeHtml(w.category || '-') + '</td>' +
+          '<td><span class="tag tag-success">启用</span></td>' +
+          '<td class="cell-sub">' + escapeHtml((w.createTime || '').replace('T', ' ').slice(0, 19)) + '</td>' +
+          '<td><button class="op-btn danger" data-id="' + w.id + '">删除</button></td>' +
+          '</tr>';
+      }).join('');
+    }
+  }).catch(function () {
+    document.getElementById('swBody').innerHTML = '<tr><td colspan="6"><div class="empty-wrap">加载失败，请确认已重启后端</div></td></tr>';
+  });
+}
+
+document.getElementById('swBody').onclick = function (e) {
+  var btn = e.target.closest('.op-btn');
+  if (!btn) return;
+  var id = parseInt(btn.getAttribute('data-id'), 10);
+  delWord(id);
+};
+
+async function delWord(id) {
+  var ok = await confirmDialog('删除敏感词', '确定删除该敏感词吗？删除后立即生效。');
+  if (!ok) return;
+  try {
+    await del('/admin/sensitive/' + id);
+    showToast('已删除');
+    loadList();
+  } catch (e) {}
+}
+
+/* ---- 新增弹窗 ---- */
+document.getElementById('addBtn').onclick = function () {
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay show';
+  overlay.innerHTML =
+    '<div class="modal-content">' +
+    '<div class="modal-header"><span>新增敏感词</span>' +
+    '<button class="modal-close" id="mClose">&times;</button></div>' +
+    '<div class="form-group"><label class="form-label">敏感词</label>' +
+    '<input class="form-input" id="wWord" maxlength="50" placeholder="如：代写论文"></div>' +
+    '<div class="form-group"><label class="form-label">分类（可选）</label>' +
+    '<input class="form-input" id="wCat" maxlength="20" placeholder="如：学术违规"></div>' +
+    '<div class="confirm-actions">' +
+    '<button class="btn btn-ghost" id="mCancel">取消</button>' +
+    '<button class="btn btn-primary" id="mOk">保存</button>' +
+    '</div></div>';
+  document.body.appendChild(overlay);
+  function close() { overlay.remove(); }
+  overlay.querySelector('#mClose').onclick = close;
+  overlay.querySelector('#mCancel').onclick = close;
+  overlay.onclick = function (e) { if (e.target === overlay) close(); };
+  overlay.querySelector('#mOk').onclick = async function () {
+    var word = document.getElementById('wWord').value.trim();
+    if (!word) { showToast('请输入敏感词'); return; }
+    var cat = document.getElementById('wCat').value.trim();
+    var btn2 = this;
+    btn2.disabled = true;
+    try {
+      // 契约：word/category 为 query 参数
+      var qs = 'word=' + encodeURIComponent(word) + (cat ? '&category=' + encodeURIComponent(cat) : '');
+      await post('/admin/sensitive?' + qs);
+      showToast('已新增并生效');
+      close();
+      loadList();
+    } catch (e) { btn2.disabled = false; }
+  };
+};
+
+requireAdmin().then(function (ok) {
+  if (!ok) return;
+  loadList();
+});
+</script>
+</body>
+</html>
