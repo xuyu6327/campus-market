@@ -4,12 +4,13 @@
 #
 # 用法：在测试脚本开头 source "$(dirname "$0")/common.sh"
 # 依赖：后端运行中（默认 http://localhost:8080，可用 BASE 环境变量覆盖）
-#        mysql 客户端位于 mysql
+#       mysql 客户端（默认取 PATH 中的 mysql，可用 MYSQL 环境变量指定完整路径）
+#       数据库账号可用 DB_USERNAME / DB_PASSWORD 环境变量覆盖
 # ============================================================
 
 BASE=${BASE:-http://localhost:8080}
-MYSQL="mysql"
-MYSQL_ARGS="-uroot -p123456 --default-character-set=utf8mb4"
+MYSQL=${MYSQL:-mysql}
+MYSQL_ARGS="-u${DB_USERNAME:-root} -p${DB_PASSWORD:-123456} --default-character-set=utf8mb4"
 DB=campus_market
 
 PASS=0

@@ -32,11 +32,7 @@ desktop.ini
 test_*.sh
 q_*.sql
 fix_*.sql
-lsdir.js
+fix_*.js
+check_*.js
+add_*.bat
 cp.txt
-add_home_btn.bat
-check_home.js
-fix_notif.js
-fix_notif_profile.js
-
-# ===== 内部文件（不对外发布）=====
